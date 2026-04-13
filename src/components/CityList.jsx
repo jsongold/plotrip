@@ -2,13 +2,23 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+function ordinal(n) {
+  if (n % 100 >= 11 && n % 100 <= 13) return n + 'th';
+  switch (n % 10) {
+    case 1: return n + 'st';
+    case 2: return n + 'nd';
+    case 3: return n + 'rd';
+    default: return n + 'th';
+  }
+}
+
 function calcDate(cities, index, startDate) {
   if (!startDate) return '';
   const d = new Date(startDate + 'T00:00:00');
   for (let i = 0; i < index; i++) {
     d.setDate(d.getDate() + (cities[i].days || 1));
   }
-  return `${MONTHS[d.getMonth()]}/${d.getDate()}`;
+  return `${MONTHS[d.getMonth()]} ${ordinal(d.getDate())}`;
 }
 
 export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate }) {
