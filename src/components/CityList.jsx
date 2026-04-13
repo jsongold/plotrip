@@ -93,15 +93,20 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                     </span>
 
                     {/* Name + country */}
-                    <span style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 14 }}>
-                      <span>{c.name}</span>
-                      {c.country && (
-                        <span style={{ fontSize: 11, color: '#888' }}>{c.country}</span>
-                      )}
+                    <span style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 14, minWidth: 0 }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
+                      <span style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.country || '\u00A0'}</span>
                     </span>
 
                     {/* Date + days */}
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {/* Flag on first item */}
+                      {i === 0 && (
+                        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="#ef4444" fillOpacity={0.2} />
+                          <line x1="4" y1="22" x2="4" y2="15" />
+                        </svg>
+                      )}
                       {editingDate === i ? (
                         <input
                           type="date"
@@ -154,22 +159,20 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                           {startDate ? formatDate(calcDateObj(cities, i, startDate)) : 'set date'}
                         </span>
                       )}
-                      <input
-                        type="number"
-                        min={1}
-                        max={99}
-                        value={c.days || 1}
-                        onChange={(e) => {
-                          const v = parseInt(e.target.value, 10);
-                          if (v >= 1 && v <= 99) onDaysChange(i, v);
-                        }}
-                        style={{
-                          width: 36, height: 26,
-                          textAlign: 'center', fontSize: 13,
-                          border: '1px solid #ddd', borderRadius: 4,
-                          padding: 0,
-                        }}
-                      />
+                      {/* Days stepper */}
+                      <span style={{ display: 'flex', alignItems: 'center', border: '1px solid #ddd', borderRadius: 4, overflow: 'hidden' }}>
+                        <button
+                          onClick={() => { const v = (c.days || 1) - 1; if (v >= 1) onDaysChange(i, v); }}
+                          style={stepBtn}
+                        >-</button>
+                        <span style={{ width: 24, textAlign: 'center', fontSize: 13, lineHeight: '26px' }}>
+                          {c.days || 1}
+                        </span>
+                        <button
+                          onClick={() => { const v = (c.days || 1) + 1; if (v <= 99) onDaysChange(i, v); }}
+                          style={stepBtn}
+                        >+</button>
+                      </span>
                     </span>
 
                     {/* Action buttons */}
@@ -217,4 +220,11 @@ const iconBtnStyle = {
   border: '1px solid #eee', background: '#fff',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   cursor: 'pointer', padding: 0
+};
+
+const stepBtn = {
+  width: 24, height: 26, border: 'none', background: '#f5f5f5',
+  cursor: 'pointer', fontSize: 14, fontWeight: 'bold', color: '#666',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  padding: 0,
 };
