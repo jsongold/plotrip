@@ -157,8 +157,8 @@ export function Map({ cities, onCitySelect }) {
 
         const arrowIcon = L.divIcon({
           className: '',
-          html: `<svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${angle}deg);pointer-events:none;">
-            <path d="M3,2 L13,8 L3,14 Z" fill="#ef4444" stroke="none"/>
+          html: `<svg width="16" height="16" viewBox="0 0 24 24" style="transform:rotate(${angle}deg);pointer-events:none;">
+            <path d="M5,12 L19,12 M13,6 L19,12 L13,18" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>`,
           iconSize: [16, 16],
           iconAnchor: [8, 8],
