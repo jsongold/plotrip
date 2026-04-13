@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '../lib/supabase';
+import 'leaflet-arrowheads';
 
 // Fix default marker icons broken by Vite asset handling
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -9,17 +10,6 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
-
-function bearing(lat1, lng1, lat2, lng2) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const toDeg = (r) => (r * 180) / Math.PI;
-  const dLng = toRad(lng2 - lng1);
-  const y = Math.sin(dLng) * Math.cos(toRad(lat2));
-  const x =
-    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
-  return (toDeg(Math.atan2(y, x)) + 360) % 360;
-}
 
 // Min population thresholds by zoom level
 function minPopForZoom(zoom) {
@@ -144,31 +134,17 @@ export function Map({ cities, onCitySelect }) {
     });
 
     if (cities.length >= 2) {
-      const latlngs = cities.map(c => [c.lat, c.lng]);
-      L.polyline(latlngs, { color: '#ef4444', weight: 3, opacity: 0.8 })
-        .addTo(lineLayerRef.current);
-
       for (let i = 0; i < cities.length - 1; i++) {
-        const a = cities[i];
-        const b = cities[i + 1];
-        const angle = bearing(a.lat, a.lng, b.lat, b.lng);
-
-        const makeArrow = (lat, lng) => {
-          const icon = L.divIcon({
-            className: '',
-            html: `<svg width="16" height="16" viewBox="0 0 24 24" style="transform:rotate(${angle}deg);pointer-events:none;">
-              <path d="M5,12 L19,12 M13,6 L19,12 L13,18" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8],
-          });
-          return L.marker([lat, lng], { icon, interactive: false });
-        };
-
-        // Arrow near the destination (80% along the segment)
-        const endLat = a.lat + (b.lat - a.lat) * 0.8;
-        const endLng = a.lng + (b.lng - a.lng) * 0.8;
-        makeArrow(endLat, endLng).addTo(lineLayerRef.current);
+        const segment = [[cities[i].lat, cities[i].lng], [cities[i + 1].lat, cities[i + 1].lng]];
+        L.polyline(segment, { color: '#ef4444', weight: 3, opacity: 0.8 })
+          .arrowheads({
+            size: '15px',
+            frequency: 'endonly',
+            yawn: 50,
+            fill: true,
+            color: '#ef4444',
+          })
+          .addTo(lineLayerRef.current);
       }
     }
 
