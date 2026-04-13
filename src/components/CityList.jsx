@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -12,16 +13,27 @@ function ordinal(n) {
   }
 }
 
-function calcDate(cities, index, startDate) {
-  if (!startDate) return '';
+function calcDateObj(cities, index, startDate) {
+  if (!startDate) return null;
   const d = new Date(startDate + 'T00:00:00');
   for (let i = 0; i < index; i++) {
     d.setDate(d.getDate() + (cities[i].days || 1));
   }
+  return d;
+}
+
+function formatDate(d) {
+  if (!d) return '';
   return `${MONTHS[d.getMonth()]} ${ordinal(d.getDate())}`;
 }
 
-export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate }) {
+function toIso(d) {
+  if (!d) return '';
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange }) {
+  const [editingDate, setEditingDate] = useState(null);
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
   }
@@ -90,9 +102,58 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
 
                     {/* Date + days */}
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap' }}>
-                        {calcDate(cities, i, startDate) ? calcDate(cities, i, startDate).replace(/^\d{4}-/, '') : ''}
-                      </span>
+                      {editingDate === i ? (
+                        <input
+                          type="date"
+                          autoFocus
+                          defaultValue={toIso(calcDateObj(cities, i, startDate))}
+                          onBlur={(e) => {
+                            setEditingDate(null);
+                            if (!e.target.value) return;
+                            const newDate = new Date(e.target.value + 'T00:00:00');
+                            if (i === 0) {
+                              onStartDateChange?.(e.target.value);
+                            } else {
+                              const prevDate = calcDateObj(cities, i - 1, startDate);
+                              if (prevDate) {
+                                const diff = Math.round((newDate - prevDate) / 86400000);
+                                if (diff >= 1) onDaysChange(i - 1, diff);
+                              }
+                            }
+                          }}
+                          onChange={(e) => {
+                            if (!e.target.value) return;
+                            const newDate = new Date(e.target.value + 'T00:00:00');
+                            if (i === 0) {
+                              onStartDateChange?.(e.target.value);
+                            } else {
+                              const prevDate = calcDateObj(cities, i - 1, startDate);
+                              if (prevDate) {
+                                const diff = Math.round((newDate - prevDate) / 86400000);
+                                if (diff >= 1) onDaysChange(i - 1, diff);
+                              }
+                            }
+                            setEditingDate(null);
+                          }}
+                          style={{
+                            width: 115, height: 26,
+                            fontSize: 12, border: '1px solid #2563eb', borderRadius: 4,
+                            padding: '0 4px', color: '#333',
+                          }}
+                        />
+                      ) : (
+                        <span
+                          onClick={() => setEditingDate(i)}
+                          style={{
+                            fontSize: 11, color: startDate ? '#2563eb' : '#bbb',
+                            whiteSpace: 'nowrap', cursor: 'pointer',
+                            padding: '2px 4px', borderRadius: 4,
+                            minWidth: 50,
+                          }}
+                        >
+                          {startDate ? formatDate(calcDateObj(cities, i, startDate)) : 'set date'}
+                        </span>
+                      )}
                       <input
                         type="number"
                         min={1}

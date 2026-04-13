@@ -185,7 +185,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
         </div>
       </div>
     </div>
