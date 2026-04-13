@@ -47,6 +47,18 @@ export function useBranch(branchId, branches) {
   useEffect(() => { load(); }, [load]);
 
   async function addCity(city) {
+    let country = city.country || null;
+    // Auto-fill country from catalog if missing
+    if (!country) {
+      const { data: match } = await supabase
+        .from('catalog_cities')
+        .select('country')
+        .ilike('name', city.name)
+        .limit(1)
+        .single();
+      if (match) country = match.country;
+    }
+
     const ownCount = cities.filter(c => !c.inherited).length;
     const { data, error } = await supabase
       .from('destinations')
@@ -55,7 +67,7 @@ export function useBranch(branchId, branches) {
         name: city.name,
         lat: city.lat,
         lng: city.lng,
-        country: city.country || null,
+        country,
         display_name: city.display_name || null,
         days: city.days || 1,
         position: ownCount,
