@@ -73,7 +73,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     const name = prompt('Name for the new branch:');
     if (!name) return;
     try {
-      const newBranch = await forkBranch(tripId, branchId, index, name);
+      const newBranch = await forkBranch(tripId, branchId, index, name, cities);
       setBranches((prev) => [...prev, newBranch]);
       navigate(`/t/${tripId}/b/${newBranch.id}`);
     } catch (err) {

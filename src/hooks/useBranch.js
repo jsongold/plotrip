@@ -22,7 +22,7 @@ export function useBranch(branchId, branches) {
       inherited = (parentDests || []).map(d => ({
         id: d.id, name: d.name, lat: d.lat, lng: d.lng,
         country: d.country || null, display_name: d.display_name || null,
-        days: d.days || 1,
+        days: d.days ?? 1,
         inherited: true,
       }));
     }
@@ -36,7 +36,7 @@ export function useBranch(branchId, branches) {
     const own = (ownDests || []).map(d => ({
       id: d.id, name: d.name, lat: d.lat, lng: d.lng,
       country: d.country || null, display_name: d.display_name || null,
-      days: d.days || 1,
+      days: d.days ?? 1,
       inherited: false,
     }));
 
@@ -78,7 +78,7 @@ export function useBranch(branchId, branches) {
     setCities(prev => [...prev, {
       id: data.id, name: data.name, lat: data.lat, lng: data.lng,
       country: data.country || null, display_name: data.display_name || null,
-      days: data.days || 1,
+      days: data.days ?? 1,
       inherited: false,
     }]);
   }
@@ -141,17 +141,33 @@ export function useBranch(branchId, branches) {
   return { cities, loading, addCity, removeCity, reorderCity, updateDays, clearCities, reload: load };
 }
 
-export async function forkBranch(tripId, parentBranchId, forkIndex, name) {
-  const { data, error } = await supabase
+export async function forkBranch(tripId, parentBranchId, forkIndex, name, cities) {
+  // Create branch without parent reference - we copy destinations instead
+  const { data: branch, error } = await supabase
     .from('branches')
     .insert({
       trip_id: tripId,
-      parent_branch_id: parentBranchId,
-      fork_index: forkIndex,
       name,
     })
     .select()
     .single();
   if (error) throw error;
-  return data;
+
+  // Copy destinations up to and including forkIndex
+  const toCopy = cities.slice(0, forkIndex + 1);
+  if (toCopy.length > 0) {
+    const rows = toCopy.map((c, i) => ({
+      branch_id: branch.id,
+      name: c.name,
+      lat: c.lat,
+      lng: c.lng,
+      country: c.country || null,
+      display_name: c.display_name || null,
+      days: c.days ?? 1,
+      position: i,
+    }));
+    await supabase.from('destinations').insert(rows);
+  }
+
+  return branch;
 }
