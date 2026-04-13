@@ -9,7 +9,18 @@ export function useGeocoder() {
     if (!res.ok) throw new Error('Request failed');
     const data = await res.json();
     if (!data.length) throw new Error('Not found');
-    return { name, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    const raw = data[0];
+    const display_name = raw.display_name || '';
+    const parts = display_name.split(',');
+    const shortName = parts[0]?.trim() || name;
+    const country = parts.length > 1 ? parts[parts.length - 1].trim() : null;
+    return {
+      name: shortName,
+      lat: parseFloat(raw.lat),
+      lng: parseFloat(raw.lon),
+      country,
+      display_name,
+    };
   }
 
   async function search(name, onSuccess) {

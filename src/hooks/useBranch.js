@@ -21,6 +21,7 @@ export function useBranch(branchId, branches) {
         .lte('position', branch.fork_index);
       inherited = (parentDests || []).map(d => ({
         id: d.id, name: d.name, lat: d.lat, lng: d.lng,
+        country: d.country || null, display_name: d.display_name || null,
         inherited: true,
       }));
     }
@@ -33,6 +34,7 @@ export function useBranch(branchId, branches) {
 
     const own = (ownDests || []).map(d => ({
       id: d.id, name: d.name, lat: d.lat, lng: d.lng,
+      country: d.country || null, display_name: d.display_name || null,
       inherited: false,
     }));
 
@@ -51,12 +53,18 @@ export function useBranch(branchId, branches) {
         name: city.name,
         lat: city.lat,
         lng: city.lng,
+        country: city.country || null,
+        display_name: city.display_name || null,
         position: ownCount,
       })
       .select()
       .single();
     if (error) throw error;
-    setCities(prev => [...prev, { id: data.id, name: data.name, lat: data.lat, lng: data.lng, inherited: false }]);
+    setCities(prev => [...prev, {
+      id: data.id, name: data.name, lat: data.lat, lng: data.lng,
+      country: data.country || null, display_name: data.display_name || null,
+      inherited: false,
+    }]);
   }
 
   async function removeCity(index) {

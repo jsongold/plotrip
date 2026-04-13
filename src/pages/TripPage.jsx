@@ -4,7 +4,6 @@ import { Toolbar } from '../components/Toolbar';
 import { CityList } from '../components/CityList';
 import { BranchBar } from '../components/BranchBar';
 import { PasswordGate } from '../components/PasswordGate';
-import { useGeocoder } from '../hooks/useGeocoder';
 import { useBranch, forkBranch } from '../hooks/useBranch';
 import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/useTrip';
 import { supabase } from '../lib/supabase';
@@ -18,7 +17,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   const { cities, loading: citiesLoading, addCity, removeCity, moveCity, clearCities } =
     useBranch(branchId, branches);
-  const { status, setStatus, search } = useGeocoder();
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -52,14 +51,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     return <PasswordGate trip={trip} onUnlock={() => setUnlocked(true)} />;
   }
 
-  function handleAdd(input, clearInput) {
-    search(input, (city) => {
-      addCity(city);
-      clearInput();
-    });
-  }
-
-  function handleCatalogSelect(city) {
+  function handleAdd(city) {
     const duplicate = cities.some(
       (c) => c.name === city.name && Math.abs(c.lat - city.lat) < 0.01
     );
@@ -157,7 +149,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: '#f5f5f5' }}>
       <Map
         cities={cities}
-        onCitySelect={handleCatalogSelect}
+        onCitySelect={handleAdd}
         style={{ flex: '1 1 65%', minHeight: 300 }}
       />
       <div style={{
