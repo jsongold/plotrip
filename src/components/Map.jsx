@@ -165,11 +165,6 @@ export function Map({ cities, onCitySelect }) {
           return L.marker([lat, lng], { icon, interactive: false });
         };
 
-        // Arrow at midpoint
-        const midLat = (a.lat + b.lat) / 2;
-        const midLng = (a.lng + b.lng) / 2;
-        makeArrow(midLat, midLng).addTo(lineLayerRef.current);
-
         // Arrow near the destination (80% along the segment)
         const endLat = a.lat + (b.lat - a.lat) * 0.8;
         const endLng = a.lng + (b.lng - a.lng) * 0.8;
