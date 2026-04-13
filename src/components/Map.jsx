@@ -56,8 +56,8 @@ export function Map({ cities, onCitySelect }) {
     catalog.clearLayers();
     CATALOG.forEach(([name, lat, lng, country]) => {
       const dot = L.circleMarker([lat, lng], {
-        radius: 5, color: '#555', weight: 1,
-        fillColor: '#bbb', fillOpacity: 0.85,
+        radius: 3, color: '#888', weight: 1,
+        fillColor: '#aaa', fillOpacity: 0.7,
         interactive: true, bubblingMouseEvents: false,
       });
       dot.bindTooltip(country ? `${name}, ${country}` : name, { direction: 'top' });
