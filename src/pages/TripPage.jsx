@@ -82,11 +82,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     }
   }
 
-  function handleClear() {
-    if (cities.length === 0) return;
-    if (confirm('Clear all cities?')) clearCities();
-  }
-
   async function handleShare() {
     const wantPassword = confirm('Add password protection for sharing?');
     if (wantPassword) {
@@ -183,7 +178,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             onBranchNameChange={handleBranchNameChange}
             onShare={handleShare}
           />
-          <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
+          <Toolbar onAdd={handleAdd} status={status} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
           <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
