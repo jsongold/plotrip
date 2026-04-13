@@ -182,5 +182,5 @@ export function Map({ cities, onCitySelect }) {
     }
   }, [cities]);
 
-  return <div ref={containerRef} style={{ flex: '1 1 65%', minHeight: 300 }} />;
+  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 }
