@@ -34,7 +34,6 @@ function toIso(d) {
 
 export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange }) {
   const [editingDate, setEditingDate] = useState(null);
-  const [editingDays, setEditingDays] = useState(null);
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
   }
@@ -153,39 +152,25 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                           {startDate ? formatDate(calcDateObj(cities, i, startDate)) : 'set date'}
                         </span>
                       )}
-                      {/* Days */}
-                      {editingDays === i ? (
-                        <input
-                          type="number"
-                          autoFocus
-                          min={1}
-                          max={99}
-                          defaultValue={c.days || 1}
-                          onBlur={(e) => {
-                            setEditingDays(null);
-                            const v = parseInt(e.target.value, 10);
-                            if (v >= 1 && v <= 99) onDaysChange(i, v);
-                          }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
-                          style={{
-                            width: 36, height: 26, textAlign: 'center',
-                            fontSize: 13, border: '1px solid #2563eb', borderRadius: 4,
-                            padding: 0,
-                          }}
-                        />
-                      ) : (
-                        <span
-                          onClick={() => setEditingDays(i)}
-                          style={{
-                            minWidth: 26, height: 26, textAlign: 'center',
-                            fontSize: 13, lineHeight: '26px', cursor: 'pointer',
-                            border: '1px solid #ddd', borderRadius: 4,
-                            padding: '0 4px', background: '#fafafa',
-                          }}
-                        >
-                          {c.days || 1}
-                        </span>
-                      )}
+                      {/* Days picker */}
+                      <select
+                        value={c.days || 1}
+                        onChange={(e) => onDaysChange(i, parseInt(e.target.value, 10))}
+                        style={{
+                          height: 26, fontSize: 13,
+                          border: '1px solid #ddd', borderRadius: 4,
+                          padding: '0 2px', background: '#fafafa',
+                          color: '#333', cursor: 'pointer',
+                          WebkitAppearance: 'none',
+                          appearance: 'none',
+                          textAlign: 'center',
+                          minWidth: 32,
+                        }}
+                      >
+                        {Array.from({ length: 30 }, (_, n) => n + 1).map(n => (
+                          <option key={n} value={n}>{n}</option>
+                        ))}
+                      </select>
                     </span>
 
                     {/* Action buttons */}
