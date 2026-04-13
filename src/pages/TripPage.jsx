@@ -15,9 +15,10 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
 
-  const { cities, loading: citiesLoading, addCity, removeCity, moveCity, clearCities } =
+  const { cities, loading: citiesLoading, addCity, removeCity, reorderCity, updateDays, clearCities } =
     useBranch(branchId, branches);
   const [status, setStatus] = useState('');
+  const startDate = trip?.start_date || null;
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +62,11 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       return;
     }
     addCity(city);
+    // Auto-set start_date to today if not set
+    if (!startDate) {
+      const today = new Date().toISOString().split('T')[0];
+      handleStartDateChange(today);
+    }
   }
 
   async function handleFork(index) {
@@ -129,6 +135,11 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     removeCity(index);
   }
 
+  async function handleStartDateChange(date) {
+    await supabase.from('trips').update({ start_date: date }).eq('id', tripId);
+    setTrip(prev => ({ ...prev, start_date: date }));
+  }
+
   async function handleTripNameChange(newName) {
     if (!newName.trim()) return;
     const { error } = await supabase.from('trips').update({ name: newName.trim() }).eq('id', tripId);
@@ -153,21 +164,29 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         style={{ flex: '1 1 65%', minHeight: 300 }}
       />
       <div style={{
-        flexShrink: 0, maxHeight: '45vh', overflowY: 'auto',
+        flexShrink: 0, maxHeight: '45vh',
         background: '#fff', borderTop: '1px solid #ddd',
-        padding: '12px 16px', boxShadow: '0 -2px 8px rgba(0,0,0,0.05)'
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
+        display: 'flex', flexDirection: 'column',
       }}>
-        <BranchBar
-          tripName={trip?.name}
-          branches={branches}
-          currentBranchId={branchId}
-          onSwitch={handleBranchSwitch}
-          onTripNameChange={handleTripNameChange}
-          onBranchNameChange={handleBranchNameChange}
-          onShare={handleShare}
-        />
-        <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
-        <CityList cities={cities} onRemove={handleRemove} onMove={moveCity} onFork={handleFork} />
+        <div style={{
+          flexShrink: 0, padding: '8px 16px',
+          borderBottom: '1px solid #eee', background: '#fff',
+        }}>
+          <BranchBar
+            tripName={trip?.name}
+            branches={branches}
+            currentBranchId={branchId}
+            onSwitch={handleBranchSwitch}
+            onTripNameChange={handleTripNameChange}
+            onBranchNameChange={handleBranchNameChange}
+            onShare={handleShare}
+          />
+          <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
+        </div>
       </div>
     </div>
   );

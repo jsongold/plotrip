@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { supabase } from '../lib/supabase';
+import 'leaflet-arrowheads';
 
 // Fix default marker icons broken by Vite asset handling
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -9,17 +10,6 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
-
-function bearing(lat1, lng1, lat2, lng2) {
-  const toRad = (d) => (d * Math.PI) / 180;
-  const toDeg = (r) => (r * 180) / Math.PI;
-  const dLng = toRad(lng2 - lng1);
-  const y = Math.sin(dLng) * Math.cos(toRad(lat2));
-  const x =
-    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
-  return (toDeg(Math.atan2(y, x)) + 360) % 360;
-}
 
 // Min population thresholds by zoom level
 function minPopForZoom(zoom) {
@@ -40,6 +30,7 @@ export function Map({ cities, onCitySelect }) {
   const onCitySelectRef = useRef(onCitySelect);
   const loadTimerRef = useRef(null);
   const abortRef = useRef(null);
+  const totalDaysRef = useRef(null);
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
 
@@ -105,6 +96,18 @@ export function Map({ cities, onCitySelect }) {
     catalogLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
+    // Total days control (top-right)
+    const TotalDays = L.Control.extend({
+      onAdd() {
+        const div = L.DomUtil.create('div');
+        div.style.cssText = 'background:#fff;padding:6px 12px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:14px;font-weight:700;color:#ef4444;';
+        div.innerHTML = '0 days';
+        totalDaysRef.current = div;
+        return div;
+      },
+    });
+    new TotalDays({ position: 'topright' }).addTo(map);
+
     // Load catalog on map move/zoom with debounce
     function onMoveEnd() {
       clearTimeout(loadTimerRef.current);
@@ -139,42 +142,43 @@ export function Map({ cities, onCitySelect }) {
         fillOpacity: 0.9,
         weight: 2,
       })
-        .bindTooltip(`${i + 1}. ${c.name}`, { permanent: true, direction: 'top', offset: [0, -10] })
+        .bindTooltip(`${i + 1}. ${c.name} (${c.days || 1}d)`, { permanent: true, direction: 'top', offset: [0, -10] })
+        .addTo(markerLayerRef.current);
+
+      // Days badge at bottom-left
+      const days = c.days || 1;
+      const dayIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          background: #fff;
+          color: #ef4444;
+          font-size: 10px;
+          font-weight: 700;
+          border: 1.5px solid #ef4444;
+          border-radius: 8px;
+          padding: 0 4px;
+          line-height: 16px;
+          white-space: nowrap;
+          pointer-events: none;
+        ">${days}d</div>`,
+        iconSize: [0, 0],
+        iconAnchor: [-6, -4],
+      });
+      L.marker([c.lat, c.lng], { icon: dayIcon, interactive: false })
         .addTo(markerLayerRef.current);
     });
 
     if (cities.length >= 2) {
-      const latlngs = cities.map(c => [c.lat, c.lng]);
-      L.polyline(latlngs, { color: '#ef4444', weight: 3, opacity: 0.8 })
-        .addTo(lineLayerRef.current);
-
       for (let i = 0; i < cities.length - 1; i++) {
-        const a = cities[i];
-        const b = cities[i + 1];
-        const midLat = (a.lat + b.lat) / 2;
-        const midLng = (a.lng + b.lng) / 2;
-        const angle = bearing(a.lat, a.lng, b.lat, b.lng);
-
-        const arrowIcon = L.divIcon({
-          className: '',
-          html: `<div style="
-            color: #ef4444;
-            font-size: 18px;
-            line-height: 1;
-            transform: rotate(${angle - 90}deg);
-            transform-origin: center center;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-          ">&#9654;</div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9],
-        });
-
-        L.marker([midLat, midLng], { icon: arrowIcon, interactive: false })
+        const segment = [[cities[i].lat, cities[i].lng], [cities[i + 1].lat, cities[i + 1].lng]];
+        L.polyline(segment, { color: '#ef4444', weight: 3, opacity: 0.8 })
+          .arrowheads({
+            size: '15px',
+            frequency: 'endonly',
+            yawn: 50,
+            fill: true,
+            color: '#ef4444',
+          })
           .addTo(lineLayerRef.current);
       }
     }
@@ -186,6 +190,12 @@ export function Map({ cities, onCitySelect }) {
     }
 
     catalogLayerRef.current.eachLayer(l => l.bringToFront?.());
+
+    // Update total days
+    if (totalDaysRef.current) {
+      const total = cities.reduce((sum, c) => sum + (c.days || 1), 0);
+      totalDaysRef.current.innerHTML = `${total} days`;
+    }
   }, [cities]);
 
   return <div ref={containerRef} style={{ flex: '1 1 65%', minHeight: 300 }} />;
