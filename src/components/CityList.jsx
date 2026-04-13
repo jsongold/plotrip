@@ -12,7 +12,7 @@ function calcDate(cities, index, startDate) {
   return `${y}-${m}-${day}`;
 }
 
-export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange }) {
+export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate }) {
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
   }
@@ -81,18 +81,9 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
 
                     {/* Date + days */}
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <input
-                        type="date"
-                        value={i === 0 ? (startDate || '') : calcDate(cities, i, startDate)}
-                        onChange={i === 0 ? (e) => onStartDateChange?.(e.target.value || null) : undefined}
-                        readOnly={i !== 0}
-                        style={{
-                          width: 115, height: 26,
-                          fontSize: 12, border: '1px solid #ddd', borderRadius: 4,
-                          padding: '0 4px', color: i === 0 ? '#333' : '#888',
-                          background: i === 0 ? '#fff' : '#f5f5f5',
-                        }}
-                      />
+                      <span style={{ fontSize: 11, color: '#888', whiteSpace: 'nowrap' }}>
+                        {calcDate(cities, i, startDate) ? calcDate(cities, i, startDate).replace(/^\d{4}-/, '') : ''}
+                      </span>
                       <input
                         type="number"
                         min={1}

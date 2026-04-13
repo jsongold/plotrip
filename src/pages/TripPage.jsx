@@ -62,6 +62,11 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       return;
     }
     addCity(city);
+    // Auto-set start_date to today if not set
+    if (!startDate) {
+      const today = new Date().toISOString().split('T')[0];
+      handleStartDateChange(today);
+    }
   }
 
   async function handleFork(index) {
@@ -180,7 +185,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} />
         </div>
       </div>
     </div>
