@@ -100,7 +100,7 @@ export function Map({ cities, onCitySelect }) {
     const TotalDays = L.Control.extend({
       onAdd() {
         const div = L.DomUtil.create('div');
-        div.style.cssText = 'background:#fff;padding:6px 12px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:14px;font-weight:700;color:#ef4444;';
+        div.style.cssText = 'background:#fff;padding:6px 12px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:14px;font-weight:700;color:#ef4444;margin:10px;';
         div.innerHTML = '0 days';
         totalDaysRef.current = div;
         return div;

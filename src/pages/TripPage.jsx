@@ -158,7 +158,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f5f5f5', overflow: 'hidden' }}>
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <Map
           cities={cities}
           onCitySelect={handleAdd}
