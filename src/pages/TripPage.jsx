@@ -153,21 +153,29 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         style={{ flex: '1 1 65%', minHeight: 300 }}
       />
       <div style={{
-        flexShrink: 0, maxHeight: '45vh', overflowY: 'auto',
+        flexShrink: 0, maxHeight: '45vh',
         background: '#fff', borderTop: '1px solid #ddd',
-        padding: '12px 16px', boxShadow: '0 -2px 8px rgba(0,0,0,0.05)'
+        boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
+        display: 'flex', flexDirection: 'column',
       }}>
-        <BranchBar
-          tripName={trip?.name}
-          branches={branches}
-          currentBranchId={branchId}
-          onSwitch={handleBranchSwitch}
-          onTripNameChange={handleTripNameChange}
-          onBranchNameChange={handleBranchNameChange}
-          onShare={handleShare}
-        />
-        <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
-        <CityList cities={cities} onRemove={handleRemove} onMove={moveCity} onFork={handleFork} />
+        <div style={{
+          flexShrink: 0, padding: '8px 16px',
+          borderBottom: '1px solid #eee', background: '#fff',
+        }}>
+          <BranchBar
+            tripName={trip?.name}
+            branches={branches}
+            currentBranchId={branchId}
+            onSwitch={handleBranchSwitch}
+            onTripNameChange={handleTripNameChange}
+            onBranchNameChange={handleBranchNameChange}
+            onShare={handleShare}
+          />
+          <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
+          <CityList cities={cities} onRemove={handleRemove} onMove={moveCity} onFork={handleFork} />
+        </div>
       </div>
     </div>
   );
