@@ -87,12 +87,23 @@ export function useBranch(branchId, branches) {
 
   async function moveCity(index, direction) {
     const city = cities[index];
-    const target = cities[index + direction];
+    const targetIndex = index + direction;
+    const target = cities[targetIndex];
     if (!city || !target || city.inherited || target.inherited) return;
 
-    await supabase.from('destinations').update({ position: getOwnPosition(index + direction) }).eq('id', city.id);
-    await supabase.from('destinations').update({ position: getOwnPosition(index) }).eq('id', target.id);
-    await load();
+    // Optimistic local swap
+    setCities(prev => {
+      const next = [...prev];
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next;
+    });
+
+    // Persist to DB using a temporary position to avoid unique constraint issues
+    const posA = getOwnPosition(index);
+    const posB = getOwnPosition(targetIndex);
+    await supabase.from('destinations').update({ position: -1 }).eq('id', city.id);
+    await supabase.from('destinations').update({ position: posA }).eq('id', target.id);
+    await supabase.from('destinations').update({ position: posB }).eq('id', city.id);
   }
 
   function getOwnPosition(globalIndex) {
