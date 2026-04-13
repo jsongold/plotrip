@@ -100,13 +100,6 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
 
                     {/* Date + days */}
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {/* Flag on first item */}
-                      {i === 0 && (
-                        <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" fill="#ef4444" fillOpacity={0.2} />
-                          <line x1="4" y1="22" x2="4" y2="15" />
-                        </svg>
-                      )}
                       {editingDate === i ? (
                         <input
                           type="date"
