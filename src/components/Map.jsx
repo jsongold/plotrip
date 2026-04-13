@@ -135,36 +135,20 @@ export function Map({ cities, onCitySelect }) {
     lineLayerRef.current.clearLayers();
 
     cities.forEach((c, i) => {
-      L.circleMarker([c.lat, c.lng], {
-        radius: 8,
-        color: '#ef4444',
-        fillColor: '#ef4444',
-        fillOpacity: 0.9,
-        weight: 2,
-      })
-        .bindTooltip(`${i + 1}. ${c.name} (${c.days || 1}d)`, { permanent: true, direction: 'top', offset: [0, -10] })
-        .addTo(markerLayerRef.current);
-
-      // Days badge at bottom-left
-      const days = c.days || 1;
-      const dayIcon = L.divIcon({
+      const icon = L.divIcon({
         className: '',
         html: `<div style="
-          background: #fff;
-          color: #ef4444;
-          font-size: 10px;
-          font-weight: 700;
-          border: 1.5px solid #ef4444;
-          border-radius: 8px;
-          padding: 0 4px;
-          line-height: 16px;
-          white-space: nowrap;
-          pointer-events: none;
-        ">${days}d</div>`,
-        iconSize: [0, 0],
-        iconAnchor: [-6, -4],
+          background: #ef4444;
+          width: 10px; height: 10px;
+          border-radius: 50%;
+          border: 2px solid #fff;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        "></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
       });
-      L.marker([c.lat, c.lng], { icon: dayIcon, interactive: false })
+      L.marker([c.lat, c.lng], { icon, interactive: false })
+        .bindTooltip(`${i + 1}. ${c.name} (${c.days || 1})`, { permanent: true, direction: 'top', offset: [0, -8] })
         .addTo(markerLayerRef.current);
     });
 
