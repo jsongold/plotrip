@@ -1,22 +1,18 @@
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 function calcDate(cities, index, startDate) {
-  if (!startDate) return null;
-  const d = new Date(startDate);
+  if (!startDate) return '';
+  const d = new Date(startDate + 'T00:00:00');
   for (let i = 0; i < index; i++) {
     d.setDate(d.getDate() + (cities[i].days || 1));
   }
-  return d;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
-function formatDate(d) {
-  if (!d) return '';
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return `${m}/${day}`;
-}
-
-export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate }) {
+export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange }) {
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
   }
@@ -102,11 +98,18 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                         }}
                       />
                       <span style={{ fontSize: 11, color: '#888' }}>d</span>
-                      {startDate && (
-                        <span style={{ fontSize: 11, color: '#2563eb', whiteSpace: 'nowrap' }}>
-                          {formatDate(calcDate(cities, i, startDate))}
-                        </span>
-                      )}
+                      <input
+                        type="date"
+                        value={i === 0 ? (startDate || '') : calcDate(cities, i, startDate)}
+                        onChange={i === 0 ? (e) => onStartDateChange?.(e.target.value || null) : undefined}
+                        readOnly={i !== 0}
+                        style={{
+                          width: 115, height: 26,
+                          fontSize: 12, border: '1px solid #ddd', borderRadius: 4,
+                          padding: '0 4px', color: i === 0 ? '#333' : '#888',
+                          background: i === 0 ? '#fff' : '#f5f5f5',
+                        }}
+                      />
                     </span>
 
                     {/* Action buttons */}

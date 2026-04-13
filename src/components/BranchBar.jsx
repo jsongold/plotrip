@@ -24,8 +24,6 @@ export function BranchBar({
   onTripNameChange,
   onBranchNameChange,
   onShare,
-  startDate,
-  onStartDateChange,
 }) {
   const currentBranch = branches?.find((b) => b.id === currentBranchId);
   const [editingTrip, setEditingTrip] = useState(false);
@@ -193,21 +191,6 @@ export function BranchBar({
         </div>
       )}
 
-      {/* Spacer */}
-      <span style={{ flex: 1 }} />
-
-      {/* Start date */}
-      <input
-        type="date"
-        value={startDate || ''}
-        onChange={(e) => onStartDateChange?.(e.target.value || null)}
-        style={{
-          border: '1px solid #ddd', borderRadius: 4,
-          fontSize: 12, padding: '2px 4px', color: '#555',
-          background: '#fff', flexShrink: 0,
-        }}
-        title="Trip start date"
-      />
     </div>
   );
 }
