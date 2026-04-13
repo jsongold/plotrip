@@ -1,0 +1,32 @@
+{
+  "name": "plotrip",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsongold/plotrip.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jsongold/plotrip/issues"
+  },
+  "homepage": "https://github.com/jsongold/plotrip#readme",
+  "description": "",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.8"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
+    "leaflet": "^1.9.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  }
+}
