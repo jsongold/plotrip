@@ -148,7 +148,7 @@ export function Map({ cities, onCitySelect }) {
         iconAnchor: [7, 7],
       });
       L.marker([c.lat, c.lng], { icon, interactive: false })
-        .bindTooltip(`${i + 1}. ${c.name}`, { permanent: true, direction: 'top', offset: [0, -8] })
+        .bindTooltip(`${i + 1}. ${c.name} (${c.days || 1})`, { permanent: true, direction: 'top', offset: [0, -8] })
         .addTo(markerLayerRef.current);
     });
 
