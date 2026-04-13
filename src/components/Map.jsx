@@ -157,21 +157,11 @@ export function Map({ cities, onCitySelect }) {
 
         const arrowIcon = L.divIcon({
           className: '',
-          html: `<div style="
-            color: #ef4444;
-            font-size: 18px;
-            line-height: 1;
-            transform: rotate(${angle - 90}deg);
-            transform-origin: center center;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-          ">&#9654;</div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9],
+          html: `<svg width="16" height="16" viewBox="0 0 16 16" style="transform:rotate(${angle}deg);pointer-events:none;">
+            <path d="M3,2 L13,8 L3,14 Z" fill="#ef4444" stroke="none"/>
+          </svg>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
         });
 
         L.marker([midLat, midLng], { icon: arrowIcon, interactive: false })
