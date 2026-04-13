@@ -32,51 +32,8 @@ function toIso(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function DaysPicker({ value, onChange, onClose }) {
-  return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.3)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#fff', borderRadius: 12,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
-          padding: 16, width: 200, maxHeight: 320, overflowY: 'auto',
-        }}
-      >
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#333', marginBottom: 8, textAlign: 'center' }}>Days</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
-          {Array.from({ length: 30 }, (_, n) => n + 1).map(n => (
-            <button
-              key={n}
-              onClick={() => { onChange(n); onClose(); }}
-              style={{
-                width: '100%', height: 36, borderRadius: 8,
-                border: n === value ? '2px solid #2563eb' : '1px solid #ddd',
-                background: n === value ? '#eff6ff' : '#fff',
-                color: n === value ? '#2563eb' : '#333',
-                fontSize: 16, fontWeight: n === value ? 700 : 400,
-                cursor: 'pointer',
-              }}
-            >
-              {n}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange }) {
   const [editingDate, setEditingDate] = useState(null);
-  const [editingDays, setEditingDays] = useState(null);
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
   }
@@ -87,7 +44,7 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
   }
 
   return (
-    <><DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="city-list">
         {(provided) => (
           <ul
@@ -195,18 +152,30 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                           {startDate ? formatDate(calcDateObj(cities, i, startDate)) : 'set date'}
                         </span>
                       )}
-                      {/* Days picker trigger */}
-                      <span
-                        onClick={() => setEditingDays(i)}
-                        style={{
+                      {/* Days picker */}
+                      <span style={{ position: 'relative', display: 'inline-flex' }}>
+                        <select
+                          value={c.days || 1}
+                          onChange={(e) => onDaysChange(i, parseInt(e.target.value, 10))}
+                          style={{
+                            position: 'absolute', inset: 0, opacity: 0,
+                            width: '100%', height: '100%', cursor: 'pointer',
+                            fontSize: 16,
+                          }}
+                        >
+                          {Array.from({ length: 30 }, (_, n) => n + 1).map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                        <span style={{
                           minWidth: 28, height: 26, textAlign: 'center',
                           fontSize: 15, fontWeight: 600, lineHeight: '26px',
-                          cursor: 'pointer', border: '1px solid #ddd',
-                          borderRadius: 4, padding: '0 6px', background: '#fafafa',
-                          color: '#333',
-                        }}
-                      >
-                        {c.days || 1}
+                          border: '1px solid #ddd', borderRadius: 4,
+                          padding: '0 6px', background: '#fafafa', color: '#333',
+                          pointerEvents: 'none',
+                        }}>
+                          {c.days || 1}
+                        </span>
                       </span>
                     </span>
 
@@ -247,14 +216,6 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
         )}
       </Droppable>
     </DragDropContext>
-    {editingDays !== null && (
-      <DaysPicker
-        value={cities[editingDays]?.days || 1}
-        onChange={(v) => onDaysChange(editingDays, v)}
-        onClose={() => setEditingDays(null)}
-      />
-    )}
-    </>
   );
 }
 
