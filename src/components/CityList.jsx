@@ -79,8 +79,20 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                       )}
                     </span>
 
-                    {/* Days + date */}
+                    {/* Date + days */}
                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <input
+                        type="date"
+                        value={i === 0 ? (startDate || '') : calcDate(cities, i, startDate)}
+                        onChange={i === 0 ? (e) => onStartDateChange?.(e.target.value || null) : undefined}
+                        readOnly={i !== 0}
+                        style={{
+                          width: 115, height: 26,
+                          fontSize: 12, border: '1px solid #ddd', borderRadius: 4,
+                          padding: '0 4px', color: i === 0 ? '#333' : '#888',
+                          background: i === 0 ? '#fff' : '#f5f5f5',
+                        }}
+                      />
                       <input
                         type="number"
                         min={1}
@@ -95,19 +107,6 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                           textAlign: 'center', fontSize: 13,
                           border: '1px solid #ddd', borderRadius: 4,
                           padding: 0,
-                        }}
-                      />
-                      <span style={{ fontSize: 11, color: '#888' }}>d</span>
-                      <input
-                        type="date"
-                        value={i === 0 ? (startDate || '') : calcDate(cities, i, startDate)}
-                        onChange={i === 0 ? (e) => onStartDateChange?.(e.target.value || null) : undefined}
-                        readOnly={i !== 0}
-                        style={{
-                          width: 115, height: 26,
-                          fontSize: 12, border: '1px solid #ddd', borderRadius: 4,
-                          padding: '0 4px', color: i === 0 ? '#333' : '#888',
-                          background: i === 0 ? '#fff' : '#f5f5f5',
                         }}
                       />
                     </span>
