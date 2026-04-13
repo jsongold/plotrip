@@ -30,6 +30,7 @@ export function Map({ cities, onCitySelect }) {
   const onCitySelectRef = useRef(onCitySelect);
   const loadTimerRef = useRef(null);
   const abortRef = useRef(null);
+  const totalDaysRef = useRef(null);
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
 
@@ -94,6 +95,18 @@ export function Map({ cities, onCitySelect }) {
     lineLayerRef.current = L.layerGroup().addTo(map);
     catalogLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
+
+    // Total days control (top-right)
+    const TotalDays = L.Control.extend({
+      onAdd() {
+        const div = L.DomUtil.create('div');
+        div.style.cssText = 'background:#fff;padding:6px 12px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15);font-size:14px;font-weight:700;color:#ef4444;';
+        div.innerHTML = '0 days';
+        totalDaysRef.current = div;
+        return div;
+      },
+    });
+    new TotalDays({ position: 'topright' }).addTo(map);
 
     // Load catalog on map move/zoom with debounce
     function onMoveEnd() {
@@ -177,6 +190,12 @@ export function Map({ cities, onCitySelect }) {
     }
 
     catalogLayerRef.current.eachLayer(l => l.bringToFront?.());
+
+    // Update total days
+    if (totalDaysRef.current) {
+      const total = cities.reduce((sum, c) => sum + (c.days || 1), 0);
+      totalDaysRef.current.innerHTML = `${total} days`;
+    }
   }, [cities]);
 
   return <div ref={containerRef} style={{ flex: '1 1 65%', minHeight: 300 }} />;
