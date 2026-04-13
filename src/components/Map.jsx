@@ -129,7 +129,29 @@ export function Map({ cities, onCitySelect }) {
         fillOpacity: 0.9,
         weight: 2,
       })
-        .bindTooltip(`${i + 1}. ${c.name}`, { permanent: true, direction: 'top', offset: [0, -10] })
+        .bindTooltip(`${i + 1}. ${c.name} (${c.days || 1}d)`, { permanent: true, direction: 'top', offset: [0, -10] })
+        .addTo(markerLayerRef.current);
+
+      // Days badge at bottom-left
+      const days = c.days || 1;
+      const dayIcon = L.divIcon({
+        className: '',
+        html: `<div style="
+          background: #fff;
+          color: #ef4444;
+          font-size: 10px;
+          font-weight: 700;
+          border: 1.5px solid #ef4444;
+          border-radius: 8px;
+          padding: 0 4px;
+          line-height: 16px;
+          white-space: nowrap;
+          pointer-events: none;
+        ">${days}d</div>`,
+        iconSize: [0, 0],
+        iconAnchor: [-6, -4],
+      });
+      L.marker([c.lat, c.lng], { icon: dayIcon, interactive: false })
         .addTo(markerLayerRef.current);
     });
 

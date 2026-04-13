@@ -15,9 +15,10 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
 
-  const { cities, loading: citiesLoading, addCity, removeCity, moveCity, clearCities } =
+  const { cities, loading: citiesLoading, addCity, removeCity, reorderCity, updateDays, clearCities } =
     useBranch(branchId, branches);
   const [status, setStatus] = useState('');
+  const startDate = trip?.start_date || null;
 
   useEffect(() => {
     let cancelled = false;
@@ -129,6 +130,11 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     removeCity(index);
   }
 
+  async function handleStartDateChange(date) {
+    await supabase.from('trips').update({ start_date: date }).eq('id', tripId);
+    setTrip(prev => ({ ...prev, start_date: date }));
+  }
+
   async function handleTripNameChange(newName) {
     if (!newName.trim()) return;
     const { error } = await supabase.from('trips').update({ name: newName.trim() }).eq('id', tripId);
@@ -170,11 +176,13 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             onTripNameChange={handleTripNameChange}
             onBranchNameChange={handleBranchNameChange}
             onShare={handleShare}
+            startDate={startDate}
+            onStartDateChange={handleStartDateChange}
           />
           <Toolbar onAdd={handleAdd} onClear={handleClear} status={status} />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onMove={moveCity} onFork={handleFork} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} />
         </div>
       </div>
     </div>
