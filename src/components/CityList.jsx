@@ -14,11 +14,11 @@ export function CityList({ cities, onRemove, onMove, onFork }) {
           <span style={{ fontWeight: 'bold', color: '#2563eb', minWidth: 24, textAlign: 'center' }}>
             {i + 1}
           </span>
-          <span style={{ flex: 1, fontSize: 14 }}>
-            {c.name}{' '}
-            <span style={{ fontSize: 11, color: '#888' }}>
-              ({c.lat.toFixed(3)}, {c.lng.toFixed(3)})
-            </span>
+          <span style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 14 }}>
+            <span>{c.name}</span>
+            {c.country && (
+              <span style={{ fontSize: 11, color: '#888' }}>{c.country}</span>
+            )}
           </span>
           <span style={{ display: 'flex', gap: 4 }}>
             <button

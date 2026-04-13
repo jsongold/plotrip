@@ -54,16 +54,16 @@ export function Map({ cities, onCitySelect }) {
   useEffect(() => {
     const catalog = catalogLayerRef.current;
     catalog.clearLayers();
-    CATALOG.forEach(([name, lat, lng]) => {
+    CATALOG.forEach(([name, lat, lng, country]) => {
       const dot = L.circleMarker([lat, lng], {
         radius: 5, color: '#555', weight: 1,
         fillColor: '#bbb', fillOpacity: 0.85,
         interactive: true, bubblingMouseEvents: false,
       });
-      dot.bindTooltip(name, { direction: 'top' });
+      dot.bindTooltip(country ? `${name}, ${country}` : name, { direction: 'top' });
       dot.on('click', (e) => {
         L.DomEvent.stopPropagation(e);
-        onCitySelectRef.current({ name, lat, lng });
+        onCitySelectRef.current({ name, lat, lng, country });
       });
       dot.addTo(catalog);
     });
