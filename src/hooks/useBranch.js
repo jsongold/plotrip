@@ -1,15 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useBranch(branchId, branches) {
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const branchIdRef = useRef(branchId);
+
+  // Keep ref in sync for use in async functions
+  useEffect(() => {
+    branchIdRef.current = branchId;
+  }, [branchId]);
+
+  // Clear cities immediately when branch changes
+  useEffect(() => {
+    setCities([]);
+    setLoading(true);
+  }, [branchId]);
 
   const branch = branches?.find(b => b.id === branchId);
 
   const load = useCallback(async () => {
     if (!branchId) return;
     setLoading(true);
+    const currentBranchId = branchId;
 
     let inherited = [];
     if (branch?.parent_branch_id != null && branch.fork_index != null) {
@@ -22,7 +35,7 @@ export function useBranch(branchId, branches) {
       inherited = (parentDests || []).map(d => ({
         id: d.id, name: d.name, lat: d.lat, lng: d.lng,
         country: d.country || null, display_name: d.display_name || null,
-        days: d.days || 1,
+        days: d.days ?? 1,
         inherited: true,
       }));
     }
@@ -30,13 +43,16 @@ export function useBranch(branchId, branches) {
     const { data: ownDests } = await supabase
       .from('destinations')
       .select('*')
-      .eq('branch_id', branchId)
+      .eq('branch_id', currentBranchId)
       .order('position');
+
+    // Abort if branch changed during async load
+    if (branchIdRef.current !== currentBranchId) return;
 
     const own = (ownDests || []).map(d => ({
       id: d.id, name: d.name, lat: d.lat, lng: d.lng,
       country: d.country || null, display_name: d.display_name || null,
-      days: d.days || 1,
+      days: d.days ?? 1,
       inherited: false,
     }));
 
@@ -63,7 +79,7 @@ export function useBranch(branchId, branches) {
     const { data, error } = await supabase
       .from('destinations')
       .insert({
-        branch_id: branchId,
+        branch_id: branchIdRef.current,
         name: city.name,
         lat: city.lat,
         lng: city.lng,
@@ -78,7 +94,7 @@ export function useBranch(branchId, branches) {
     setCities(prev => [...prev, {
       id: data.id, name: data.name, lat: data.lat, lng: data.lng,
       country: data.country || null, display_name: data.display_name || null,
-      days: data.days || 1,
+      days: data.days ?? 1,
       inherited: false,
     }]);
   }
@@ -86,9 +102,17 @@ export function useBranch(branchId, branches) {
   async function removeCity(index) {
     const city = cities[index];
     if (city.inherited) return;
+
+    // Optimistic removal
+    setCities(prev => prev.filter((_, i) => i !== index));
+
     await supabase.from('destinations').delete().eq('id', city.id);
-    await reorderAfterRemove(index);
-    await load();
+
+    // Reorder remaining own destinations
+    const remaining = cities.filter((c, i) => i !== index && !c.inherited);
+    for (let i = 0; i < remaining.length; i++) {
+      await supabase.from('destinations').update({ position: i }).eq('id', remaining[i].id);
+    }
   }
 
   async function reorderAfterRemove(removedIndex) {
@@ -141,17 +165,33 @@ export function useBranch(branchId, branches) {
   return { cities, loading, addCity, removeCity, reorderCity, updateDays, clearCities, reload: load };
 }
 
-export async function forkBranch(tripId, parentBranchId, forkIndex, name) {
-  const { data, error } = await supabase
+export async function forkBranch(tripId, parentBranchId, forkIndex, name, cities) {
+  // Create branch without parent reference - we copy destinations instead
+  const { data: branch, error } = await supabase
     .from('branches')
     .insert({
       trip_id: tripId,
-      parent_branch_id: parentBranchId,
-      fork_index: forkIndex,
       name,
     })
     .select()
     .single();
   if (error) throw error;
-  return data;
+
+  // Copy destinations up to and including forkIndex
+  const toCopy = cities.slice(0, forkIndex + 1);
+  if (toCopy.length > 0) {
+    const rows = toCopy.map((c, i) => ({
+      branch_id: branch.id,
+      name: c.name,
+      lat: c.lat,
+      lng: c.lng,
+      country: c.country || null,
+      display_name: c.display_name || null,
+      days: c.days ?? 1,
+      position: i,
+    }));
+    await supabase.from('destinations').insert(rows);
+  }
+
+  return branch;
 }

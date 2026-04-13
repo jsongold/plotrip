@@ -31,6 +31,7 @@ export function Map({ cities, onCitySelect }) {
   const loadTimerRef = useRef(null);
   const abortRef = useRef(null);
   const totalDaysRef = useRef(null);
+  const prevCityCountRef = useRef(0);
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
 
@@ -167,11 +168,16 @@ export function Map({ cities, onCitySelect }) {
       }
     }
 
-    if (cities.length === 1) {
-      map.setView([cities[0].lat, cities[0].lng], 5);
-    } else if (cities.length > 1) {
-      map.fitBounds(L.latLngBounds(cities.map(c => [c.lat, c.lng])), { padding: [40, 40] });
+    // Only fit bounds when cities are added/removed, not reordered
+    const prevCount = prevCityCountRef.current;
+    if (cities.length !== prevCount) {
+      if (cities.length === 1) {
+        map.setView([cities[0].lat, cities[0].lng], 5);
+      } else if (cities.length > 1) {
+        map.fitBounds(L.latLngBounds(cities.map(c => [c.lat, c.lng])), { padding: [40, 40] });
+      }
     }
+    prevCityCountRef.current = cities.length;
 
     catalogLayerRef.current.eachLayer(l => l.bringToFront?.());
 

@@ -87,11 +87,6 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                       ≡
                     </span>
 
-                    {/* Number */}
-                    <span style={{ fontWeight: 'bold', color: '#2563eb', minWidth: 24, textAlign: 'center' }}>
-                      {i + 1}
-                    </span>
-
                     {/* Name + country */}
                     <span style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 14, minWidth: 0 }}>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
