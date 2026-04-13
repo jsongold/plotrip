@@ -4,7 +4,7 @@ export function CityList({ cities, onRemove, onMove, onFork }) {
   }
 
   return (
-    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+    <ul style={{ listStyle: 'none', padding: '0 4px', margin: '8px 0 0' }}>
       {cities.map((c, i) => (
         <li key={`${c.name}-${i}`} style={{
           display: 'flex', alignItems: 'center', gap: 8,
