@@ -1,15 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
 export function useBranch(branchId, branches) {
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const branchIdRef = useRef(branchId);
+
+  // Keep ref in sync for use in async functions
+  useEffect(() => {
+    branchIdRef.current = branchId;
+  }, [branchId]);
+
+  // Clear cities immediately when branch changes
+  useEffect(() => {
+    setCities([]);
+    setLoading(true);
+  }, [branchId]);
 
   const branch = branches?.find(b => b.id === branchId);
 
   const load = useCallback(async () => {
     if (!branchId) return;
     setLoading(true);
+    const currentBranchId = branchId;
 
     let inherited = [];
     if (branch?.parent_branch_id != null && branch.fork_index != null) {
@@ -30,8 +43,11 @@ export function useBranch(branchId, branches) {
     const { data: ownDests } = await supabase
       .from('destinations')
       .select('*')
-      .eq('branch_id', branchId)
+      .eq('branch_id', currentBranchId)
       .order('position');
+
+    // Abort if branch changed during async load
+    if (branchIdRef.current !== currentBranchId) return;
 
     const own = (ownDests || []).map(d => ({
       id: d.id, name: d.name, lat: d.lat, lng: d.lng,
@@ -63,7 +79,7 @@ export function useBranch(branchId, branches) {
     const { data, error } = await supabase
       .from('destinations')
       .insert({
-        branch_id: branchId,
+        branch_id: branchIdRef.current,
         name: city.name,
         lat: city.lat,
         lng: city.lng,
