@@ -155,7 +155,7 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                       {/* Days picker */}
                       <span style={{ position: 'relative', display: 'inline-flex' }}>
                         <select
-                          value={c.days || 1}
+                          value={c.days ?? 1}
                           onChange={(e) => onDaysChange(i, parseInt(e.target.value, 10))}
                           style={{
                             position: 'absolute', inset: 0, opacity: 0,
@@ -163,6 +163,7 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                             fontSize: 16,
                           }}
                         >
+                          <option value={0}>0</option>
                           {Array.from({ length: 30 }, (_, n) => n + 1).map(n => (
                             <option key={n} value={n}>{n}</option>
                           ))}
@@ -174,7 +175,7 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                           padding: '0 6px', background: '#fafafa', color: '#333',
                           pointerEvents: 'none',
                         }}>
-                          {c.days || 1}
+                          {c.days ?? 1}
                         </span>
                       </span>
                     </span>
