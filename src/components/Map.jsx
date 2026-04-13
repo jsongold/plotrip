@@ -151,21 +151,29 @@ export function Map({ cities, onCitySelect }) {
       for (let i = 0; i < cities.length - 1; i++) {
         const a = cities[i];
         const b = cities[i + 1];
-        const midLat = (a.lat + b.lat) / 2;
-        const midLng = (a.lng + b.lng) / 2;
         const angle = bearing(a.lat, a.lng, b.lat, b.lng);
 
-        const arrowIcon = L.divIcon({
-          className: '',
-          html: `<svg width="16" height="16" viewBox="0 0 24 24" style="transform:rotate(${angle}deg);pointer-events:none;">
-            <path d="M5,12 L19,12 M13,6 L19,12 L13,18" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8],
-        });
+        const makeArrow = (lat, lng) => {
+          const icon = L.divIcon({
+            className: '',
+            html: `<svg width="16" height="16" viewBox="0 0 24 24" style="transform:rotate(${angle}deg);pointer-events:none;">
+              <path d="M5,12 L19,12 M13,6 L19,12 L13,18" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+          });
+          return L.marker([lat, lng], { icon, interactive: false });
+        };
 
-        L.marker([midLat, midLng], { icon: arrowIcon, interactive: false })
-          .addTo(lineLayerRef.current);
+        // Arrow at midpoint
+        const midLat = (a.lat + b.lat) / 2;
+        const midLng = (a.lng + b.lng) / 2;
+        makeArrow(midLat, midLng).addTo(lineLayerRef.current);
+
+        // Arrow near the destination (80% along the segment)
+        const endLat = a.lat + (b.lat - a.lat) * 0.8;
+        const endLng = a.lng + (b.lng - a.lng) * 0.8;
+        makeArrow(endLat, endLng).addTo(lineLayerRef.current);
       }
     }
 
