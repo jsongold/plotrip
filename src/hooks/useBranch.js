@@ -102,9 +102,17 @@ export function useBranch(branchId, branches) {
   async function removeCity(index) {
     const city = cities[index];
     if (city.inherited) return;
+
+    // Optimistic removal
+    setCities(prev => prev.filter((_, i) => i !== index));
+
     await supabase.from('destinations').delete().eq('id', city.id);
-    await reorderAfterRemove(index);
-    await load();
+
+    // Reorder remaining own destinations
+    const remaining = cities.filter((c, i) => i !== index && !c.inherited);
+    for (let i = 0; i < remaining.length; i++) {
+      await supabase.from('destinations').update({ position: i }).eq('id', remaining[i].id);
+    }
   }
 
   async function reorderAfterRemove(removedIndex) {
