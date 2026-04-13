@@ -1,26 +1,27 @@
 import { useCallback } from 'react';
 import AsyncSelect from 'react-select/async';
-import { CATALOG } from '../data/cities';
+import { supabase } from '../lib/supabase';
 
 export function Toolbar({ onAdd, onClear, status }) {
 
   const loadOptions = useCallback(async (inputValue) => {
-    const q = inputValue.trim().toLowerCase();
+    const q = inputValue.trim();
     if (!q) return [];
 
-    // Search catalog first
-    const catalogResults = CATALOG
-      .filter(([name, , , country]) =>
-        name.toLowerCase().includes(q) ||
-        (country && country.toLowerCase().includes(q))
-      )
-      .slice(0, 8)
-      .map(([name, lat, lng, country]) => ({
-        label: country ? `${name}, ${country}` : name,
-        value: { name, lat, lng, country, source: 'catalog' },
-      }));
+    // Search Supabase catalog_cities (167k+ cities)
+    const { data: dbResults } = await supabase
+      .from('catalog_cities')
+      .select('name,lat,lng,country')
+      .ilike('name', `%${q}%`)
+      .order('population', { ascending: false })
+      .limit(10);
 
-    // Also search Nominatim for results not in catalog
+    const catalogResults = (dbResults || []).map(d => ({
+      label: d.country ? `${d.name}, ${d.country}` : d.name,
+      value: { name: d.name, lat: d.lat, lng: d.lng, country: d.country, source: 'catalog' },
+    }));
+
+    // Also search Nominatim for places not in DB
     let nominatimResults = [];
     if (q.length >= 2) {
       try {
@@ -56,8 +57,8 @@ export function Toolbar({ onAdd, onClear, status }) {
     }
 
     return [
-      ...(catalogResults.length ? [{ label: 'Popular destinations', options: catalogResults }] : []),
-      ...(nominatimResults.length ? [{ label: 'Search results', options: nominatimResults }] : []),
+      ...(catalogResults.length ? [{ label: 'Destinations', options: catalogResults }] : []),
+      ...(nominatimResults.length ? [{ label: 'Other results', options: nominatimResults }] : []),
     ];
   }, []);
 

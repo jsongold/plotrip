@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { CATALOG } from '../data/cities';
+import { supabase } from '../lib/supabase';
 
 // Fix default marker icons broken by Vite asset handling
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -10,9 +10,6 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
-/**
- * Calculate bearing in degrees from point A to point B.
- */
 function bearing(lat1, lng1, lat2, lng2) {
   const toRad = (d) => (d * Math.PI) / 180;
   const toDeg = (r) => (r * 180) / Math.PI;
@@ -24,37 +21,63 @@ function bearing(lat1, lng1, lat2, lng2) {
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
 }
 
+// Min population thresholds by zoom level
+function minPopForZoom(zoom) {
+  if (zoom >= 12) return 0;
+  if (zoom >= 10) return 500;
+  if (zoom >= 8) return 5000;
+  if (zoom >= 6) return 20000;
+  if (zoom >= 4) return 100000;
+  return 500000;
+}
+
 export function Map({ cities, onCitySelect }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayerRef = useRef(null);
   const lineLayerRef = useRef(null);
   const catalogLayerRef = useRef(null);
-
-  // Init map once
-  useEffect(() => {
-    const map = L.map(containerRef.current).setView([20, 0], 2);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19,
-    }).addTo(map);
-
-    markerLayerRef.current = L.layerGroup().addTo(map);
-    lineLayerRef.current = L.layerGroup().addTo(map);
-    catalogLayerRef.current = L.layerGroup().addTo(map);
-    mapRef.current = map;
-
-    return () => map.remove();
-  }, []);
-
-  // Render catalog dots (only once — onCitySelect ref handles dynamic callback)
   const onCitySelectRef = useRef(onCitySelect);
+  const loadTimerRef = useRef(null);
+  const abortRef = useRef(null);
+
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
 
-  useEffect(() => {
+  const loadCatalog = useCallback(async (map) => {
+    if (!map) return;
+
+    // Cancel previous request
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const bounds = map.getBounds();
+    const zoom = map.getZoom();
+    const minPop = minPopForZoom(zoom);
+
+    const south = bounds.getSouth();
+    const north = bounds.getNorth();
+    const west = bounds.getWest();
+    const east = bounds.getEast();
+
+    let query = supabase
+      .from('catalog_cities')
+      .select('name,lat,lng,country')
+      .gte('lat', south)
+      .lte('lat', north)
+      .gte('lng', west)
+      .lte('lng', east)
+      .gte('population', minPop)
+      .order('population', { ascending: false })
+      .limit(500);
+
+    const { data, error } = await query;
+    if (controller.signal.aborted || error) return;
+
     const catalog = catalogLayerRef.current;
     catalog.clearLayers();
-    CATALOG.forEach(([name, lat, lng, country]) => {
+
+    (data || []).forEach(({ name, lat, lng, country }) => {
       const dot = L.circleMarker([lat, lng], {
         radius: 3, color: '#888', weight: 1,
         fillColor: '#aaa', fillOpacity: 0.7,
@@ -68,6 +91,37 @@ export function Map({ cities, onCitySelect }) {
       dot.addTo(catalog);
     });
   }, []);
+
+  // Init map once
+  useEffect(() => {
+    const map = L.map(containerRef.current).setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap',
+      maxZoom: 19,
+    }).addTo(map);
+
+    markerLayerRef.current = L.layerGroup().addTo(map);
+    lineLayerRef.current = L.layerGroup().addTo(map);
+    catalogLayerRef.current = L.layerGroup().addTo(map);
+    mapRef.current = map;
+
+    // Load catalog on map move/zoom with debounce
+    function onMoveEnd() {
+      clearTimeout(loadTimerRef.current);
+      loadTimerRef.current = setTimeout(() => loadCatalog(map), 300);
+    }
+    map.on('moveend', onMoveEnd);
+    map.on('zoomend', onMoveEnd);
+
+    // Initial load
+    loadCatalog(map);
+
+    return () => {
+      map.off('moveend', onMoveEnd);
+      map.off('zoomend', onMoveEnd);
+      map.remove();
+    };
+  }, [loadCatalog]);
 
   // Update itinerary markers and route
   useEffect(() => {
@@ -94,7 +148,6 @@ export function Map({ cities, onCitySelect }) {
       L.polyline(latlngs, { color: '#ef4444', weight: 3, opacity: 0.8 })
         .addTo(lineLayerRef.current);
 
-      // Draw arrowheads at the midpoint of each segment using DivIcon
       for (let i = 0; i < cities.length - 1; i++) {
         const a = cities[i];
         const b = cities[i + 1];
@@ -132,7 +185,6 @@ export function Map({ cities, onCitySelect }) {
       map.fitBounds(L.latLngBounds(cities.map(c => [c.lat, c.lng])), { padding: [40, 40] });
     }
 
-    // Keep catalog dots on top
     catalogLayerRef.current.eachLayer(l => l.bringToFront?.());
   }, [cities]);
 
