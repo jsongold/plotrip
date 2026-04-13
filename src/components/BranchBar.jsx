@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const inputStyle = {
   border: 'none',
@@ -34,6 +34,18 @@ export function BranchBar({
   const [branchHover, setBranchHover] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [shareHover, setShareHover] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handleClick(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('pointerdown', handleClick);
+    return () => document.removeEventListener('pointerdown', handleClick);
+  }, [dropdownOpen]);
 
   const commitTripName = () => {
     setEditingTrip(false);
@@ -109,12 +121,12 @@ export function BranchBar({
 
       {/* Branch switcher dropdown */}
       {branches && branches.length > 1 && (
-        <div style={{ position: 'relative' }}>
+        <div ref={dropdownRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setDropdownOpen((v) => !v)}
             style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              padding: '2px 4px', fontSize: 12, color: '#666',
+              padding: '4px 8px', fontSize: 18, color: '#666',
               borderRadius: 4, lineHeight: 1,
             }}
             title="Switch branch"
