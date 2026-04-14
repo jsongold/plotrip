@@ -188,7 +188,8 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
       {/* Layer 3: Search bar (always on top) */}
       <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 24,
+        position: 'absolute', left: 0, right: 0,
+        bottom: 'calc(24px + env(safe-area-inset-bottom))',
         zIndex: 500, padding: '8px 16px',
         display: 'flex', flexDirection: 'column', gap: 6,
         pointerEvents: 'none',
