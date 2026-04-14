@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 
-export function DestinationSheet({ open, onClose, children }) {
+export function DestinationSheet({ open, onClose, header, children }) {
   const [dragY, setDragY] = useState(0);
   const dragStartRef = useRef(null);
 
@@ -39,15 +39,16 @@ export function DestinationSheet({ open, onClose, children }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         style={{
-          flexShrink: 0, padding: '16px 0 12px',
-          display: 'flex', justifyContent: 'center', alignItems: 'center',
-          cursor: 'grab', touchAction: 'none',
-          minHeight: 40,
+          flexShrink: 0, cursor: 'grab', touchAction: 'none',
         }}
       >
         <div style={{
-          width: 48, height: 5, borderRadius: 3, background: '#ccc',
-        }} />
+          padding: '8px 0',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+        }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#ccc' }} />
+        </div>
+        {header}
       </div>
       {children}
     </div>
