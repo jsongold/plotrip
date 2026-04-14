@@ -181,7 +181,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             onShare={handleShare}
           />
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px', minHeight: 0 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 80px', minHeight: 0 }}>
           <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
         </div>
       </DestinationSheet>
@@ -246,8 +246,8 @@ function DestinationSheet({ open, onClose, children }) {
 
   return (
     <div style={{
-      position: 'absolute', left: 0, right: 0, bottom: 70,
-      height: 'calc(70vh - 70px)', zIndex: 400,
+      position: 'absolute', left: 0, right: 0, bottom: 0,
+      height: '70vh', zIndex: 400,
       background: '#fff', borderTop: '1px solid #ddd',
       borderTopLeftRadius: 12, borderTopRightRadius: 12,
       boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
