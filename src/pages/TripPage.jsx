@@ -43,7 +43,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#888' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#888' }}>
         Loading trip...
       </div>
     );
@@ -153,7 +153,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   }
 
   return (
-    <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
       {/* Layer 1: Map */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
         <Map
