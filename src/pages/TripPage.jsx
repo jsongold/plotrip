@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Map } from '../components/Map';
 import { Toolbar } from '../components/Toolbar';
 import { CityList } from '../components/CityList';
@@ -18,6 +18,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const { cities, loading: citiesLoading, addCity, removeCity, reorderCity, updateDays, clearCities } =
     useBranch(branchId, branches);
   const [status, setStatus] = useState('');
+  const [panelOpen, setPanelOpen] = useState(false);
   const startDate = trip?.start_date || null;
 
   useEffect(() => {
@@ -152,19 +153,20 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   }
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f5f5f5', overflow: 'hidden' }}>
-      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+      {/* Layer 1: Map */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
         <Map
           cities={cities}
           onCitySelect={handleAdd}
         />
       </div>
-      <div style={{
-        flexShrink: 0, height: '45vh',
-        background: '#fff', borderTop: '1px solid #ddd',
-        boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
-        display: 'flex', flexDirection: 'column',
-      }}>
+
+      {/* Layer 2: Destination list (bottom sheet) */}
+      <DestinationSheet
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+      >
         <div style={{
           flexShrink: 0, padding: '8px 16px',
           borderBottom: '1px solid #eee', background: '#fff',
@@ -178,12 +180,97 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             onBranchNameChange={handleBranchNameChange}
             onShare={handleShare}
           />
-          <Toolbar onAdd={handleAdd} status={status} />
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 80px', minHeight: 0 }}>
           <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
         </div>
+      </DestinationSheet>
+
+      {/* Layer 3: Search bar (always on top) */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 24,
+        zIndex: 500, padding: '8px 16px',
+        display: 'flex', flexDirection: 'column', gap: 6,
+        pointerEvents: 'none',
+        background: 'transparent',
+      }}>
+        {!panelOpen && (
+          <button
+            onClick={() => setPanelOpen(true)}
+            title="Show destinations"
+            style={{
+              alignSelf: 'center', width: 36, height: 36, borderRadius: '50%',
+              border: 'none', background: 'transparent', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+              color: '#333',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+              pointerEvents: 'auto',
+            }}
+          >
+            <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <ellipse cx="12" cy="12" rx="4" ry="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+            </svg>
+          </button>
+        )}
+        <div style={{ pointerEvents: 'auto' }}>
+          <Toolbar onAdd={handleAdd} status={status} />
+        </div>
       </div>
+    </div>
+  );
+}
+
+function DestinationSheet({ open, onClose, children }) {
+  const [dragY, setDragY] = useState(0);
+  const dragStartRef = useRef(null);
+
+  function handlePointerDown(e) {
+    dragStartRef.current = e.clientY;
+  }
+  function handlePointerMove(e) {
+    if (dragStartRef.current == null) return;
+    const dy = e.clientY - dragStartRef.current;
+    if (dy > 0) setDragY(dy);
+  }
+  function handlePointerUp() {
+    if (dragY > 80) {
+      onClose();
+    }
+    setDragY(0);
+    dragStartRef.current = null;
+  }
+
+  if (!open && dragY === 0) return null;
+
+  return (
+    <div style={{
+      position: 'absolute', left: 0, right: 0, bottom: 0,
+      height: '70vh', zIndex: 400,
+      background: '#fff', borderTop: '1px solid #ddd',
+      borderTopLeftRadius: 12, borderTopRightRadius: 12,
+      boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+      display: 'flex', flexDirection: 'column',
+      transform: `translateY(${dragY}px)`,
+      transition: dragStartRef.current ? 'none' : 'transform 0.2s',
+    }}>
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={{
+          flexShrink: 0, padding: '8px 0',
+          display: 'flex', justifyContent: 'center',
+          cursor: 'grab', touchAction: 'none',
+        }}
+      >
+        <div style={{
+          width: 40, height: 4, borderRadius: 2, background: '#ccc',
+        }} />
+      </div>
+      {children}
     </div>
   );
 }

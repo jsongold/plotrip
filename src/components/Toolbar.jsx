@@ -68,7 +68,7 @@ export function Toolbar({ onAdd, status }) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'transparent' }}>
       <div style={{ flex: 1, minWidth: 160 }}>
         <AsyncSelect
           cacheOptions
@@ -80,6 +80,8 @@ export function Toolbar({ onAdd, status }) {
           isClearable
           styles={selectStyles}
           components={{ DropdownIndicator: null }}
+          menuPlacement="top"
+          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
         />
       </div>
       {status && <span style={{ fontSize: 12, color: '#666' }}>{status}</span>}
@@ -118,6 +120,7 @@ const selectStyles = {
     borderRadius: 8,
     boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
   }),
+  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   placeholder: (base) => ({
     ...base,
     fontSize: 14,
