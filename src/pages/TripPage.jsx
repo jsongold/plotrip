@@ -93,23 +93,25 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       <DestinationSheet
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
+        header={
+          <div style={{
+            padding: '4px 16px 8px',
+            borderBottom: '1px solid #eee', background: '#fff',
+          }}>
+            <BranchBar
+              tripName={trip?.name}
+              branches={branches}
+              currentBranchId={branchId}
+              onSwitch={handleBranchSwitch}
+              onTripNameChange={handleTripNameChange}
+              onBranchNameChange={handleBranchNameChange}
+              onShare={handleShare}
+              onNewTrip={handleNewTrip}
+              onNewBranch={handleNewBranch}
+            />
+          </div>
+        }
       >
-        <div style={{
-          flexShrink: 0, padding: '8px 16px',
-          borderBottom: '1px solid #eee', background: '#fff',
-        }}>
-          <BranchBar
-            tripName={trip?.name}
-            branches={branches}
-            currentBranchId={branchId}
-            onSwitch={handleBranchSwitch}
-            onTripNameChange={handleTripNameChange}
-            onBranchNameChange={handleBranchNameChange}
-            onShare={handleShare}
-            onNewTrip={handleNewTrip}
-            onNewBranch={handleNewBranch}
-          />
-        </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 80px', minHeight: 0 }}>
           <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
         </div>
