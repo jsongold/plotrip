@@ -18,6 +18,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const { cities, loading: citiesLoading, addCity, removeCity, reorderCity, updateDays, clearCities } =
     useBranch(branchId, branches);
   const [status, setStatus] = useState('');
+  const [panelOpen, setPanelOpen] = useState(false);
   const startDate = trip?.start_date || null;
 
   useEffect(() => {
@@ -160,32 +161,55 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         />
       </div>
       <div style={{
-        flexShrink: 0, height: '45vh',
+        flexShrink: 0,
         background: '#fff', borderTop: '1px solid #ddd',
         boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
         display: 'flex', flexDirection: 'column',
+        maxHeight: panelOpen ? '70vh' : 'auto',
       }}>
+        {panelOpen && (
+          <>
+            <div style={{
+              flexShrink: 0, padding: '8px 16px',
+              borderBottom: '1px solid #eee', background: '#fff',
+            }}>
+              <BranchBar
+                tripName={trip?.name}
+                branches={branches}
+                currentBranchId={branchId}
+                onSwitch={handleBranchSwitch}
+                onTripNameChange={handleTripNameChange}
+                onBranchNameChange={handleBranchNameChange}
+                onShare={handleShare}
+              />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px', minHeight: 0 }}>
+              <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
+            </div>
+          </>
+        )}
         <div style={{
           flexShrink: 0, padding: '8px 16px',
-          borderBottom: '1px solid #eee', background: '#fff',
+          borderTop: panelOpen ? '1px solid #eee' : 'none',
+          background: '#fff',
+          display: 'flex', flexDirection: 'column', gap: 6,
         }}>
-          <BranchBar
-            tripName={trip?.name}
-            branches={branches}
-            currentBranchId={branchId}
-            onSwitch={handleBranchSwitch}
-            onTripNameChange={handleTripNameChange}
-            onBranchNameChange={handleBranchNameChange}
-            onShare={handleShare}
-          />
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
-        </div>
-        <div style={{
-          flexShrink: 0, padding: '8px 16px',
-          borderTop: '1px solid #eee', background: '#fff',
-        }}>
+          <button
+            onClick={() => setPanelOpen(v => !v)}
+            title={panelOpen ? 'Hide destinations' : 'Show destinations'}
+            style={{
+              alignSelf: 'center', width: 36, height: 36, borderRadius: '50%',
+              border: '1px solid #eee', background: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+              color: panelOpen ? '#2563eb' : '#555',
+            }}
+          >
+            <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <ellipse cx="12" cy="12" rx="4" ry="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+            </svg>
+          </button>
           <Toolbar onAdd={handleAdd} status={status} />
         </div>
       </div>
