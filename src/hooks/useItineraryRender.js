@@ -45,13 +45,9 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
       }
     }
 
-    // Only fit bounds on initial load (when going from empty to populated)
+    // On initial load, center on the first destination
     if (prevCityCountRef.current === 0 && cities.length > 0) {
-      if (cities.length === 1) {
-        map.setView([cities[0].lat, cities[0].lng], 5);
-      } else {
-        map.fitBounds(L.latLngBounds(cities.map(c => [c.lat, c.lng])), { padding: [40, 40] });
-      }
+      map.setView([cities[0].lat, cities[0].lng], 6);
     }
     prevCityCountRef.current = cities.length;
 
