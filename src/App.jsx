@@ -24,14 +24,14 @@ function ShortRedirect({ code }) {
 
   if (error) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#888' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#888' }}>
         {error}
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#888' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#888' }}>
       Redirecting...
     </div>
   );
@@ -41,7 +41,7 @@ export default function App() {
   const { page, tripId, branchId, code, navigate, replace } = useRouter();
 
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f5f5f5' }}>
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f5f5f5' }}>
       {page === 'home' && <HomePage navigate={navigate} />}
       {page === 'trip' && (
         <TripPage
