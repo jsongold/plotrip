@@ -92,11 +92,12 @@ export function Toolbar({ onAdd, status }) {
 const selectStyles = {
   control: (base) => ({
     ...base,
-    borderRadius: 6,
+    borderRadius: 8,
     borderColor: '#ccc',
+    background: '#fff',
     fontSize: 14,
-    minHeight: 38,
-    boxShadow: 'none',
+    minHeight: 44,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
     '&:hover': { borderColor: '#999' },
   }),
   option: (base, state) => ({
