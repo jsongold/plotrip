@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet-arrowheads';
 
 export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef) {
-  const prevCityCountRef = useRef(0);
+  const initialViewSetRef = useRef(false);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -46,10 +46,13 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
     }
 
     // On initial load, center on the first destination with regional zoom
-    if (prevCityCountRef.current === 0 && cities.length > 0) {
-      map.setView([cities[0].lat, cities[0].lng], 5);
+    if (!initialViewSetRef.current && cities.length > 0) {
+      initialViewSetRef.current = true;
+      map.whenReady(() => {
+        map.invalidateSize();
+        map.setView([cities[0].lat, cities[0].lng], 5, { animate: false });
+      });
     }
-    prevCityCountRef.current = cities.length;
 
     if (catalogLayerRef?.current) {
       catalogLayerRef.current.eachLayer(l => l.bringToFront?.());
