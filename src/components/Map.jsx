@@ -53,18 +53,6 @@ export function Map({ cities, onCitySelect }) {
     };
   }, []);
 
-  // Center on first destination once cities are loaded
-  const initialViewSetRef = useRef(false);
-  useEffect(() => {
-    if (initialViewSetRef.current) return;
-    if (!cities || cities.length === 0) return;
-    if (!mapRef.current) return;
-    initialViewSetRef.current = true;
-    const first = cities[0];
-    mapRef.current.invalidateSize();
-    mapRef.current.setView([first.lat, first.lng], 5);
-  }, [cities]);
-
   useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef);
   useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef);
 
