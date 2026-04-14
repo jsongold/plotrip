@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { calcDateObj, formatDate, toIso, formatDayOfWeek, isWeekend, isHoliday } from '../lib/date-utils';
 
 export function CityListItem({
@@ -16,6 +17,7 @@ export function CityListItem({
   innerRef,
   isDragging,
 }) {
+  const [editingDays, setEditingDays] = useState(false);
   return (
     <li
       ref={innerRef}
@@ -116,32 +118,42 @@ export function CityListItem({
             </span>
           );
         })()}
-        {/* Days picker */}
-        <span style={{ position: 'relative', display: 'inline-flex' }}>
-          <select
-            value={c.days ?? 1}
-            onChange={(e) => onDaysChange(i, parseInt(e.target.value, 10))}
+        {/* Days picker: tap to edit inline */}
+        {editingDays ? (
+          <input
+            type="number"
+            inputMode="numeric"
+            autoFocus
+            min={0}
+            max={99}
+            defaultValue={c.days ?? 1}
+            onBlur={(e) => {
+              setEditingDays(false);
+              const v = parseInt(e.target.value, 10);
+              if (!Number.isNaN(v) && v >= 0 && v <= 99) onDaysChange(i, v);
+            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
             style={{
-              position: 'absolute', inset: 0, opacity: 0,
-              width: '100%', height: '100%', cursor: 'pointer',
-              fontSize: 16,
+              width: 40, height: 26, textAlign: 'center',
+              fontSize: 15, fontWeight: 600,
+              border: '1px solid #2563eb', borderRadius: 4,
+              padding: 0, outline: 'none',
+            }}
+          />
+        ) : (
+          <span
+            onClick={() => setEditingDays(true)}
+            style={{
+              minWidth: 28, height: 26, textAlign: 'center',
+              fontSize: 15, fontWeight: 600, lineHeight: '26px',
+              border: '1px solid #ddd', borderRadius: 4,
+              padding: '0 6px', background: '#fafafa', color: '#333',
+              cursor: 'pointer',
             }}
           >
-            <option value={0}>0</option>
-            {Array.from({ length: 30 }, (_, n) => n + 1).map(n => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-          <span style={{
-            minWidth: 28, height: 26, textAlign: 'center',
-            fontSize: 15, fontWeight: 600, lineHeight: '26px',
-            border: '1px solid #ddd', borderRadius: 4,
-            padding: '0 6px', background: '#fafafa', color: '#333',
-            pointerEvents: 'none',
-          }}>
             {c.days ?? 1}
           </span>
-        </span>
+        )}
       </span>
 
       {/* Action buttons */}

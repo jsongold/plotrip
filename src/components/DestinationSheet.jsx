@@ -61,16 +61,17 @@ export function DestinationSheet({ open, onClose, header, children }) {
 
   if (!open && offsetY === 0) return null;
 
+  const visibleHeight = Math.max(0, sheetHeight - offsetY);
+
   return (
     <div style={{
       position: 'fixed', left: 0, right: 0, bottom: 0,
-      height: '70vh', zIndex: 400,
+      height: visibleHeight, zIndex: 400,
       background: '#fff', borderTop: '1px solid #ddd',
       borderTopLeftRadius: 12, borderTopRightRadius: 12,
       boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
       display: 'flex', flexDirection: 'column',
-      transform: `translateY(${offsetY}px)`,
-      transition: dragging ? 'none' : 'transform 0.25s ease-out',
+      transition: dragging ? 'none' : 'height 0.25s ease-out',
     }}>
       <div
         onPointerDown={handlePointerDown}
