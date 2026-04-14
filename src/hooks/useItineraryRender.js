@@ -1,10 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import L from 'leaflet';
 import 'leaflet-arrowheads';
 
 export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef) {
-  const prevCityCountRef = useRef(0);
-
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -45,15 +43,6 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
       }
     }
 
-    // Only fit bounds on initial load (when going from empty to populated)
-    if (prevCityCountRef.current === 0 && cities.length > 0) {
-      if (cities.length === 1) {
-        map.setView([cities[0].lat, cities[0].lng], 5);
-      } else {
-        map.fitBounds(L.latLngBounds(cities.map(c => [c.lat, c.lng])), { padding: [40, 40] });
-      }
-    }
-    prevCityCountRef.current = cities.length;
 
     if (catalogLayerRef?.current) {
       catalogLayerRef.current.eachLayer(l => l.bringToFront?.());
