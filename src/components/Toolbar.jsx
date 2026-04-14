@@ -1,65 +1,79 @@
 import { useCallback } from 'react';
-import AsyncSelect from 'react-select/async';
+import { AsyncPaginate } from 'react-select-async-paginate';
 import { supabase } from '../lib/supabase';
 
+const PAGE_SIZE = 20;
+
+async function fetchNominatim(q, exclude) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`;
+    const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data
+      .filter(d => {
+        const n = d.display_name.split(',')[0].trim().toLowerCase();
+        return !exclude.some(c => c.value.name.toLowerCase() === n);
+      })
+      .map(d => {
+        const parts = d.display_name.split(',');
+        const name = parts[0].trim();
+        const country = parts.length > 1 ? parts[parts.length - 1].trim() : null;
+        return {
+          label: d.display_name,
+          value: {
+            name,
+            lat: parseFloat(d.lat),
+            lng: parseFloat(d.lon),
+            country,
+            display_name: d.display_name,
+            source: 'nominatim',
+          },
+        };
+      });
+  } catch {
+    return [];
+  }
+}
+
 export function Toolbar({ onAdd, status }) {
-
-  const loadOptions = useCallback(async (inputValue) => {
+  const loadOptions = useCallback(async (inputValue, _loaded, additional) => {
     const q = inputValue.trim();
-    if (!q) return [];
+    if (!q) {
+      return { options: [], hasMore: false, additional: { page: 0 } };
+    }
+    const page = additional?.page ?? 0;
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
 
-    // Search Supabase catalog_cities (167k+ cities)
-    const { data: dbResults } = await supabase
+    // Escape commas in query for .or() syntax
+    const safeQ = q.replace(/,/g, ' ');
+
+    const { data } = await supabase
       .from('catalog_cities')
       .select('name,lat,lng,country')
-      .ilike('name', `%${q}%`)
+      .or(`name.ilike.%${safeQ}%,country.ilike.%${safeQ}%`)
       .order('population', { ascending: false })
-      .limit(10);
+      .range(from, to);
 
-    const catalogResults = (dbResults || []).map(d => ({
+    const catalogResults = (data || []).map(d => ({
       label: d.country ? `${d.name}, ${d.country}` : d.name,
       value: { name: d.name, lat: d.lat, lng: d.lng, country: d.country, source: 'catalog' },
     }));
 
-    // Also search Nominatim for places not in DB
-    let nominatimResults = [];
-    if (q.length >= 2) {
-      try {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(q)}`;
-        const res = await fetch(url, { headers: { 'Accept-Language': 'en' } });
-        if (res.ok) {
-          const data = await res.json();
-          nominatimResults = data
-            .filter(d => {
-              const n = d.display_name.split(',')[0].trim().toLowerCase();
-              return !catalogResults.some(c => c.value.name.toLowerCase() === n);
-            })
-            .map(d => {
-              const parts = d.display_name.split(',');
-              const name = parts[0].trim();
-              const country = parts.length > 1 ? parts[parts.length - 1].trim() : null;
-              return {
-                label: d.display_name,
-                value: {
-                  name,
-                  lat: parseFloat(d.lat),
-                  lng: parseFloat(d.lon),
-                  country,
-                  display_name: d.display_name,
-                  source: 'nominatim',
-                },
-              };
-            });
-        }
-      } catch {
-        // Nominatim failure is not critical
-      }
+    const hasMore = catalogResults.length === PAGE_SIZE;
+
+    // Nominatim fallback only on first page if few results
+    let extra = [];
+    if (page === 0 && catalogResults.length < 5 && q.length >= 2) {
+      extra = await fetchNominatim(q, catalogResults);
     }
 
-    return [
-      ...(catalogResults.length ? [{ label: 'Destinations', options: catalogResults }] : []),
-      ...(nominatimResults.length ? [{ label: 'Other results', options: nominatimResults }] : []),
-    ];
+    return {
+      options: [...catalogResults, ...extra],
+      hasMore,
+      additional: { page: page + 1 },
+    };
   }, []);
 
   function handleSelect(option) {
@@ -70,18 +84,19 @@ export function Toolbar({ onAdd, status }) {
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: 'transparent' }}>
       <div style={{ flex: 1, minWidth: 160 }}>
-        <AsyncSelect
-          cacheOptions
+        <AsyncPaginate
           loadOptions={loadOptions}
           onChange={handleSelect}
-          placeholder="Search city..."
-          noOptionsMessage={({ inputValue }) => inputValue ? 'Type to search...' : 'Type a city name'}
+          placeholder="Search city or country..."
+          noOptionsMessage={({ inputValue }) => inputValue ? 'Type to search...' : 'Type a city or country name'}
           value={null}
           isClearable
           styles={selectStyles}
           components={{ DropdownIndicator: null }}
           menuPlacement="top"
           menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+          additional={{ page: 0 }}
+          debounceTimeout={300}
         />
       </div>
       {status && <span style={{ fontSize: 12, color: '#666' }}>{status}</span>}
