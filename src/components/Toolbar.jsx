@@ -92,6 +92,7 @@ export function Toolbar({ onAdd, status }) {
           value={null}
           isSearchable
           styles={selectStyles}
+          components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
           menuPlacement="top"
           menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
           additional={{ page: 0 }}
