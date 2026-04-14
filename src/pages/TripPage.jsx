@@ -112,20 +112,20 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           </div>
         }
       >
-        <div style={{ padding: '8px 16px 80px' }}>
+        <div style={{ padding: '8px 16px 100px' }}>
           <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
         </div>
       </DestinationSheet>
 
-      {/* Layer 3: Search bar (always on top) */}
+      {/* Layer 3: Search bar (always on top, fixed to viewport) */}
       {!panelOpen && (
         <button
           onClick={() => setPanelOpen(true)}
           title="Show destinations"
           style={{
-            position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+            position: 'fixed', left: '50%', transform: 'translateX(-50%)',
             bottom: 'calc(70px + env(safe-area-inset-bottom))',
-            zIndex: 500,
+            zIndex: 1000,
             width: 36, height: 36, borderRadius: '50%',
             border: 'none', background: 'transparent', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
@@ -141,9 +141,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         </button>
       )}
       <div style={{
-        position: 'absolute', left: 0, right: 0,
+        position: 'fixed', left: 0, right: 0,
         bottom: 'calc(24px + env(safe-area-inset-bottom))',
-        zIndex: 500, padding: '0 16px',
+        zIndex: 1000, padding: '0 16px',
       }}>
         <Toolbar onAdd={handleAdd} status={status} />
       </div>
