@@ -162,8 +162,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       </div>
       <div style={{
         flexShrink: 0,
-        background: '#fff', borderTop: '1px solid #ddd',
-        boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
+        background: panelOpen ? '#fff' : 'transparent',
+        borderTop: panelOpen ? '1px solid #ddd' : 'none',
+        boxShadow: panelOpen ? '0 -2px 8px rgba(0,0,0,0.05)' : 'none',
         display: 'flex', flexDirection: 'column',
         maxHeight: panelOpen ? '70vh' : 'auto',
       }}>
@@ -191,7 +192,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         <div style={{
           flexShrink: 0, padding: '8px 16px',
           borderTop: panelOpen ? '1px solid #eee' : 'none',
-          background: '#fff',
+          background: panelOpen ? '#fff' : 'transparent',
           display: 'flex', flexDirection: 'column', gap: 6,
         }}>
           <button
