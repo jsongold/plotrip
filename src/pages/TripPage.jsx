@@ -246,15 +246,14 @@ function DestinationSheet({ open, onClose, children }) {
 
   return (
     <div style={{
-      position: 'absolute', left: 0, right: 0, bottom: 0,
-      height: '70vh', zIndex: 400,
+      position: 'absolute', left: 0, right: 0, bottom: 70,
+      height: 'calc(70vh - 70px)', zIndex: 400,
       background: '#fff', borderTop: '1px solid #ddd',
       borderTopLeftRadius: 12, borderTopRightRadius: 12,
       boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
       display: 'flex', flexDirection: 'column',
       transform: `translateY(${dragY}px)`,
       transition: dragStartRef.current ? 'none' : 'transform 0.2s',
-      paddingBottom: 80,
     }}>
       <div
         onPointerDown={handlePointerDown}
