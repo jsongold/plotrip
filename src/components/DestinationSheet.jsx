@@ -39,13 +39,14 @@ export function DestinationSheet({ open, onClose, children }) {
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
         style={{
-          flexShrink: 0, padding: '8px 0',
-          display: 'flex', justifyContent: 'center',
+          flexShrink: 0, padding: '16px 0 12px',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
           cursor: 'grab', touchAction: 'none',
+          minHeight: 40,
         }}
       >
         <div style={{
-          width: 40, height: 4, borderRadius: 2, background: '#ccc',
+          width: 48, height: 5, borderRadius: 3, background: '#ccc',
         }} />
       </div>
       {children}
