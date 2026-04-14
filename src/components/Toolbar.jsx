@@ -90,13 +90,14 @@ export function Toolbar({ onAdd, status }) {
           placeholder="Search city or country..."
           noOptionsMessage={({ inputValue }) => inputValue ? 'Type to search...' : 'Type a city or country name'}
           value={null}
-          isClearable
+          isSearchable
           styles={selectStyles}
-          components={{ DropdownIndicator: null }}
           menuPlacement="top"
           menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
           additional={{ page: 0 }}
           debounceTimeout={300}
+          openMenuOnFocus
+          openMenuOnClick
         />
       </div>
       {status && <span style={{ fontSize: 12, color: '#666' }}>{status}</span>}
