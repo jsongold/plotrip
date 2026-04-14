@@ -19,12 +19,20 @@ export function Map({ cities, onCitySelect }) {
   const catalogLayerRef = useRef(null);
   const onCitySelectRef = useRef(onCitySelect);
   const totalDaysRef = useRef(null);
+  const citiesRef = useRef(cities);
+  const didInitialViewRef = useRef(false);
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
+  useEffect(() => { citiesRef.current = cities; }, [cities]);
 
   // Init map once
   useEffect(() => {
-    const map = L.map(containerRef.current).setView([20, 0], 2);
+    // Set initial view based on first city if available, else world
+    const firstCity = citiesRef.current?.[0];
+    const initialCenter = firstCity ? [firstCity.lat, firstCity.lng] : [20, 0];
+    const initialZoom = firstCity ? 5 : 2;
+    const map = L.map(containerRef.current).setView(initialCenter, initialZoom);
+    if (firstCity) didInitialViewRef.current = true;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap',
       maxZoom: 19,
@@ -53,8 +61,7 @@ export function Map({ cities, onCitySelect }) {
     };
   }, []);
 
-  // Center on first destination once cities become populated
-  const didInitialViewRef = useRef(false);
+  // If cities arrive AFTER map init, center on first destination
   useEffect(() => {
     if (didInitialViewRef.current) return;
     if (!cities || cities.length === 0) return;
@@ -62,13 +69,8 @@ export function Map({ cities, onCitySelect }) {
     if (!map) return;
     didInitialViewRef.current = true;
     const first = cities[0];
-    // Defer to let map container render and DOM settle
-    const id = setTimeout(() => {
-      if (!mapRef.current) return;
-      mapRef.current.invalidateSize();
-      mapRef.current.setView([first.lat, first.lng], 5, { animate: false });
-    }, 50);
-    return () => clearTimeout(id);
+    map.invalidateSize();
+    map.setView([first.lat, first.lng], 5, { animate: false });
   }, [cities]);
 
   useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef);
