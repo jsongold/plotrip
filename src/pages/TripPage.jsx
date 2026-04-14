@@ -162,15 +162,18 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       </div>
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0,
-        background: panelOpen ? '#fff' : 'transparent',
-        borderTop: panelOpen ? '1px solid #ddd' : 'none',
-        boxShadow: panelOpen ? '0 -2px 8px rgba(0,0,0,0.05)' : 'none',
+        background: 'transparent',
         display: 'flex', flexDirection: 'column',
         maxHeight: panelOpen ? '70vh' : 'auto',
         zIndex: 400,
       }}>
         {panelOpen && (
-          <>
+          <div style={{
+            background: '#fff', borderTop: '1px solid #ddd',
+            boxShadow: '0 -2px 8px rgba(0,0,0,0.05)',
+            display: 'flex', flexDirection: 'column',
+            flex: 1, minHeight: 0,
+          }}>
             <div style={{
               flexShrink: 0, padding: '8px 16px',
               borderBottom: '1px solid #eee', background: '#fff',
@@ -188,12 +191,11 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px', minHeight: 0 }}>
               <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
             </div>
-          </>
+          </div>
         )}
         <div style={{
           flexShrink: 0, padding: '8px 16px',
-          borderTop: panelOpen ? '1px solid #eee' : 'none',
-          background: panelOpen ? '#fff' : 'transparent',
+          background: 'transparent',
           display: 'flex', flexDirection: 'column', gap: 6,
         }}>
           <button
@@ -201,9 +203,10 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             title={panelOpen ? 'Hide destinations' : 'Show destinations'}
             style={{
               alignSelf: 'center', width: 36, height: 36, borderRadius: '50%',
-              border: '1px solid #eee', background: '#fff', cursor: 'pointer',
+              border: 'none', background: 'transparent', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-              color: panelOpen ? '#2563eb' : '#555',
+              color: panelOpen ? '#2563eb' : '#333',
+              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
             }}
           >
             <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
