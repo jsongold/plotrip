@@ -1,26 +1,48 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+
+const SHEET_HEIGHT = typeof window !== 'undefined' ? window.innerHeight * 0.7 : 500;
+const CLOSE_THRESHOLD = SHEET_HEIGHT * 0.6;
+const HALF_POSITION = SHEET_HEIGHT * 0.5;
 
 export function DestinationSheet({ open, onClose, header, children }) {
-  const [dragY, setDragY] = useState(0);
+  const [offsetY, setOffsetY] = useState(0); // 0 = fully open, positive = translated down
+  const [dragging, setDragging] = useState(false);
   const dragStartRef = useRef(null);
+  const offsetStartRef = useRef(0);
+
+  // Reset to fully open when sheet becomes open
+  useEffect(() => {
+    if (open) setOffsetY(0);
+  }, [open]);
 
   function handlePointerDown(e) {
     dragStartRef.current = e.clientY;
+    offsetStartRef.current = offsetY;
+    setDragging(true);
   }
   function handlePointerMove(e) {
     if (dragStartRef.current == null) return;
     const dy = e.clientY - dragStartRef.current;
-    if (dy > 0) setDragY(dy);
+    const next = Math.max(0, offsetStartRef.current + dy);
+    setOffsetY(next);
   }
   function handlePointerUp() {
-    if (dragY > 80) {
-      onClose();
-    }
-    setDragY(0);
+    if (dragStartRef.current == null) return;
     dragStartRef.current = null;
+    setDragging(false);
+
+    // Snap to nearest: fully open, half, or close
+    if (offsetY > CLOSE_THRESHOLD) {
+      onClose();
+      setOffsetY(0);
+    } else if (offsetY > HALF_POSITION * 0.5) {
+      setOffsetY(HALF_POSITION);
+    } else {
+      setOffsetY(0);
+    }
   }
 
-  if (!open && dragY === 0) return null;
+  if (!open && offsetY === 0) return null;
 
   return (
     <div style={{
@@ -30,8 +52,8 @@ export function DestinationSheet({ open, onClose, header, children }) {
       borderTopLeftRadius: 12, borderTopRightRadius: 12,
       boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
       display: 'flex', flexDirection: 'column',
-      transform: `translateY(${dragY}px)`,
-      transition: dragStartRef.current ? 'none' : 'transform 0.2s',
+      transform: `translateY(${offsetY}px)`,
+      transition: dragging ? 'none' : 'transform 0.25s ease-out',
     }}>
       <div
         onPointerDown={handlePointerDown}
