@@ -99,13 +99,20 @@ export function CityListItem({
               onClick={() => setEditingDate(i)}
               style={{
                 fontSize: 11,
-                color: !startDate ? '#bbb' : redDay ? '#dc2626' : '#2563eb',
+                color: !startDate ? '#bbb' : '#888',
                 whiteSpace: 'nowrap', cursor: 'pointer',
                 padding: '2px 4px', borderRadius: 4,
                 minWidth: 50,
               }}
             >
-              {dObj ? `${formatDate(dObj)} ${formatDayOfWeek(dObj)}` : 'set date'}
+              {dObj ? (
+                <>
+                  {formatDate(dObj)}{' '}
+                  <span style={{ color: redDay ? '#dc2626' : '#888' }}>
+                    {formatDayOfWeek(dObj)}
+                  </span>
+                </>
+              ) : 'set date'}
             </span>
           );
         })()}
