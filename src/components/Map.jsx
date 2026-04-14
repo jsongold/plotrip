@@ -168,12 +168,11 @@ export function Map({ cities, onCitySelect }) {
       }
     }
 
-    // Only fit bounds when cities are added/removed, not reordered
-    const prevCount = prevCityCountRef.current;
-    if (cities.length !== prevCount) {
+    // Only fit bounds on initial load (when going from empty to populated)
+    if (prevCityCountRef.current === 0 && cities.length > 0) {
       if (cities.length === 1) {
         map.setView([cities[0].lat, cities[0].lng], 5);
-      } else if (cities.length > 1) {
+      } else {
         map.fitBounds(L.latLngBounds(cities.map(c => [c.lat, c.lng])), { padding: [40, 40] });
       }
     }
