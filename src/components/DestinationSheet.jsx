@@ -1,12 +1,25 @@
 import { Drawer } from 'vaul';
+import { useState } from 'react';
+
+const SNAP_POINTS = [0.4, 0.7];
 
 export function DestinationSheet({ open, onClose, header, children }) {
+  const [snap, setSnap] = useState(0.7);
+
   return (
     <Drawer.Root
       open={open}
-      onOpenChange={(v) => { if (!v) onClose(); }}
+      onOpenChange={(v) => {
+        if (!v) {
+          setSnap(0.7);
+          onClose();
+        }
+      }}
       modal={false}
       dismissible={true}
+      snapPoints={SNAP_POINTS}
+      activeSnapPoint={snap}
+      setActiveSnapPoint={setSnap}
     >
       <Drawer.Portal>
         <Drawer.Content
@@ -19,7 +32,8 @@ export function DestinationSheet({ open, onClose, header, children }) {
             border: 'none', borderTop: '1px solid #ddd',
             zIndex: 400,
             display: 'flex', flexDirection: 'column',
-            height: '70dvh',
+            height: '96dvh',
+            maxHeight: '96dvh',
             outline: 'none',
           }}
         >

@@ -53,6 +53,24 @@ export function Map({ cities, onCitySelect }) {
     };
   }, []);
 
+  // Center on first destination once cities become populated
+  const didInitialViewRef = useRef(false);
+  useEffect(() => {
+    if (didInitialViewRef.current) return;
+    if (!cities || cities.length === 0) return;
+    const map = mapRef.current;
+    if (!map) return;
+    didInitialViewRef.current = true;
+    const first = cities[0];
+    // Defer to let map container render and DOM settle
+    const id = setTimeout(() => {
+      if (!mapRef.current) return;
+      mapRef.current.invalidateSize();
+      mapRef.current.setView([first.lat, first.lng], 5, { animate: false });
+    }, 50);
+    return () => clearTimeout(id);
+  }, [cities]);
+
   useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef);
   useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef);
 
