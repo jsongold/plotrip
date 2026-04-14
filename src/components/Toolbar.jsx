@@ -68,7 +68,7 @@ export function Toolbar({ onAdd, status }) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+    <div style={{ display: 'flex', gap: 0, alignItems: 'center' }}>
       <div style={{ flex: 1, minWidth: 160 }}>
         <AsyncSelect
           cacheOptions
