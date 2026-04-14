@@ -45,9 +45,9 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
       }
     }
 
-    // On initial load, center on the first destination
+    // On initial load, center on the first destination with regional zoom
     if (prevCityCountRef.current === 0 && cities.length > 0) {
-      map.setView([cities[0].lat, cities[0].lng], 6);
+      map.setView([cities[0].lat, cities[0].lng], 5);
     }
     prevCityCountRef.current = cities.length;
 
