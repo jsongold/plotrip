@@ -116,37 +116,34 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       </DestinationSheet>
 
       {/* Layer 3: Search bar (always on top) */}
+      {!panelOpen && (
+        <button
+          onClick={() => setPanelOpen(true)}
+          title="Show destinations"
+          style={{
+            position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+            bottom: 'calc(70px + env(safe-area-inset-bottom))',
+            zIndex: 500,
+            width: 36, height: 36, borderRadius: '50%',
+            border: 'none', background: 'transparent', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+            color: '#333',
+            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+          }}
+        >
+          <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <ellipse cx="12" cy="12" rx="4" ry="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+          </svg>
+        </button>
+      )}
       <div style={{
         position: 'absolute', left: 0, right: 0,
         bottom: 'calc(24px + env(safe-area-inset-bottom))',
-        zIndex: 500, padding: '8px 16px',
-        display: 'flex', flexDirection: 'column', gap: 6,
-        pointerEvents: 'none',
-        background: 'transparent',
+        zIndex: 500, padding: '0 16px',
       }}>
-        {!panelOpen && (
-          <button
-            onClick={() => setPanelOpen(true)}
-            title="Show destinations"
-            style={{
-              alignSelf: 'center', width: 36, height: 36, borderRadius: '50%',
-              border: 'none', background: 'transparent', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-              color: '#333',
-              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
-              pointerEvents: 'auto',
-            }}
-          >
-            <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <ellipse cx="12" cy="12" rx="4" ry="10" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-            </svg>
-          </button>
-        )}
-        <div style={{ pointerEvents: 'auto' }}>
-          <Toolbar onAdd={handleAdd} status={status} />
-        </div>
+        <Toolbar onAdd={handleAdd} status={status} />
       </div>
     </div>
   );
