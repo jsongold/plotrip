@@ -1,4 +1,4 @@
-import { calcDateObj, formatDate, toIso } from '../lib/date-utils';
+import { calcDateObj, formatDate, toIso, formatDayOfWeek, isWeekend, isHoliday } from '../lib/date-utils';
 
 export function CityListItem({
   city: c,
@@ -91,19 +91,24 @@ export function CityListItem({
               padding: '0 4px', color: '#333',
             }}
           />
-        ) : (
-          <span
-            onClick={() => setEditingDate(i)}
-            style={{
-              fontSize: 11, color: startDate ? '#2563eb' : '#bbb',
-              whiteSpace: 'nowrap', cursor: 'pointer',
-              padding: '2px 4px', borderRadius: 4,
-              minWidth: 50,
-            }}
-          >
-            {startDate ? formatDate(calcDateObj(cities, i, startDate)) : 'set date'}
-          </span>
-        )}
+        ) : (() => {
+          const dObj = startDate ? calcDateObj(cities, i, startDate) : null;
+          const redDay = dObj && (isWeekend(dObj) || isHoliday(dObj, c.country));
+          return (
+            <span
+              onClick={() => setEditingDate(i)}
+              style={{
+                fontSize: 11,
+                color: !startDate ? '#bbb' : redDay ? '#dc2626' : '#2563eb',
+                whiteSpace: 'nowrap', cursor: 'pointer',
+                padding: '2px 4px', borderRadius: 4,
+                minWidth: 50,
+              }}
+            >
+              {dObj ? `${formatDate(dObj)} ${formatDayOfWeek(dObj)}` : 'set date'}
+            </span>
+          );
+        })()}
         {/* Days picker */}
         <span style={{ position: 'relative', display: 'inline-flex' }}>
           <select
