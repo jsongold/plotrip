@@ -1,13 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Map } from '../components/Map';
 import { Toolbar } from '../components/Toolbar';
 import { CityList } from '../components/CityList';
 import { BranchBar } from '../components/BranchBar';
 import { PasswordGate } from '../components/PasswordGate';
-import { useBranch, forkBranch } from '../hooks/useBranch';
+import { DestinationSheet } from '../components/DestinationSheet';
+import { useBranch } from '../hooks/useBranch';
 import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/useTrip';
-import { supabase } from '../lib/supabase';
-import { hashPassword } from '../lib/crypto';
+import { useTripHandlers } from '../hooks/useTripHandlers';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -41,6 +41,32 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     });
   }, [trip, loading, branchId, tripId, replace]);
 
+  const {
+    handleAdd,
+    handleFork,
+    handleShare,
+    handleRemove,
+    handleTripNameChange,
+    handleBranchNameChange,
+    handleBranchSwitch,
+    handleNewTrip,
+    handleNewBranch,
+    handleStartDateChange,
+  } = useTripHandlers({
+    tripId,
+    branchId,
+    cities,
+    trip,
+    branches,
+    addCity,
+    removeCity,
+    clearCities,
+    setTrip,
+    setBranches,
+    setStatus,
+    navigate,
+  });
+
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#888' }}>
@@ -51,126 +77,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   if (isProtected(trip) && !isUnlocked(tripId) && !unlocked) {
     return <PasswordGate trip={trip} onUnlock={() => setUnlocked(true)} />;
-  }
-
-  function handleAdd(city) {
-    const duplicate = cities.some(
-      (c) => c.name === city.name && Math.abs(c.lat - city.lat) < 0.01
-    );
-    if (duplicate) {
-      setStatus(`${city.name} is already added`);
-      setTimeout(() => setStatus(''), 2000);
-      return;
-    }
-    addCity(city);
-    // Auto-set start_date to today if not set
-    if (!startDate) {
-      const today = new Date().toISOString().split('T')[0];
-      handleStartDateChange(today);
-    }
-  }
-
-  async function handleFork(index) {
-    const name = prompt('Name for the new branch:');
-    if (!name) return;
-    try {
-      const newBranch = await forkBranch(tripId, branchId, index, name, cities);
-      setBranches((prev) => [...prev, newBranch]);
-      navigate(`/t/${tripId}/b/${newBranch.id}`);
-    } catch (err) {
-      setStatus(`Fork failed: ${err.message}`);
-      setTimeout(() => setStatus(''), 3000);
-    }
-  }
-
-  async function handleShare() {
-    const wantPassword = confirm('Add password protection for sharing?');
-    if (wantPassword) {
-      const password = prompt('Enter a password for this trip:');
-      if (password) {
-        const hash = await hashPassword(password);
-        await supabase.from('trips').update({ password_hash: hash }).eq('id', tripId);
-        setTrip(prev => ({ ...prev, password_hash: hash }));
-      } else {
-        await supabase.from('trips').update({ password_hash: null }).eq('id', tripId);
-        setTrip(prev => ({ ...prev, password_hash: null }));
-      }
-    } else {
-      await supabase.from('trips').update({ password_hash: null }).eq('id', tripId);
-      setTrip(prev => ({ ...prev, password_hash: null }));
-    }
-
-    const targetUrl = `${window.location.origin}/t/${tripId}/b/${branchId}`;
-
-    // Reuse existing short link for this trip/branch
-    const { data: existing } = await supabase
-      .from('short_links')
-      .select('code')
-      .eq('url', targetUrl)
-      .limit(1)
-      .single();
-
-    let code;
-    if (existing) {
-      code = existing.code;
-    } else {
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      code = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      await supabase.from('short_links').insert({ code, url: targetUrl });
-    }
-
-    const shortUrl = `${window.location.origin}/s/${code}`;
-    await navigator.clipboard.writeText(shortUrl);
-    setStatus('Short link copied!');
-    setTimeout(() => setStatus(''), 2000);
-  }
-
-  function handleRemove(index) {
-    const city = cities[index];
-    if (!confirm(`Remove ${city.name}?`)) return;
-    removeCity(index);
-  }
-
-  async function handleStartDateChange(date) {
-    await supabase.from('trips').update({ start_date: date }).eq('id', tripId);
-    setTrip(prev => ({ ...prev, start_date: date }));
-  }
-
-  async function handleTripNameChange(newName) {
-    if (!newName.trim()) return;
-    const { error } = await supabase.from('trips').update({ name: newName.trim() }).eq('id', tripId);
-    if (!error) setTrip(prev => ({ ...prev, name: newName.trim() }));
-  }
-
-  async function handleBranchNameChange(bId, newName) {
-    if (!newName.trim()) return;
-    const { error } = await supabase.from('branches').update({ name: newName.trim() }).eq('id', bId);
-    if (!error) setBranches(prev => prev.map(b => b.id === bId ? { ...b, name: newName.trim() } : b));
-  }
-
-  function handleBranchSwitch(newBranchId) {
-    navigate(`/t/${tripId}/b/${newBranchId}`);
-  }
-
-  function handleNewTrip() {
-    navigate('/');
-  }
-
-  async function handleNewBranch() {
-    const name = prompt('Name for the new branch:');
-    if (!name?.trim()) return;
-    const { data, error } = await supabase
-      .from('branches')
-      .insert({ trip_id: tripId, name: name.trim() })
-      .select()
-      .single();
-    if (error) {
-      setStatus(`Failed: ${error.message}`);
-      setTimeout(() => setStatus(''), 3000);
-      return;
-    }
-    setBranches(prev => [...prev, data]);
-    navigate(`/t/${tripId}/b/${data.id}`);
   }
 
   return (
@@ -242,59 +148,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           <Toolbar onAdd={handleAdd} status={status} />
         </div>
       </div>
-    </div>
-  );
-}
-
-function DestinationSheet({ open, onClose, children }) {
-  const [dragY, setDragY] = useState(0);
-  const dragStartRef = useRef(null);
-
-  function handlePointerDown(e) {
-    dragStartRef.current = e.clientY;
-  }
-  function handlePointerMove(e) {
-    if (dragStartRef.current == null) return;
-    const dy = e.clientY - dragStartRef.current;
-    if (dy > 0) setDragY(dy);
-  }
-  function handlePointerUp() {
-    if (dragY > 80) {
-      onClose();
-    }
-    setDragY(0);
-    dragStartRef.current = null;
-  }
-
-  if (!open && dragY === 0) return null;
-
-  return (
-    <div style={{
-      position: 'absolute', left: 0, right: 0, bottom: 0,
-      height: '70vh', zIndex: 400,
-      background: '#fff', borderTop: '1px solid #ddd',
-      borderTopLeftRadius: 12, borderTopRightRadius: 12,
-      boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
-      display: 'flex', flexDirection: 'column',
-      transform: `translateY(${dragY}px)`,
-      transition: dragStartRef.current ? 'none' : 'transform 0.2s',
-    }}>
-      <div
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        style={{
-          flexShrink: 0, padding: '8px 0',
-          display: 'flex', justifyContent: 'center',
-          cursor: 'grab', touchAction: 'none',
-        }}
-      >
-        <div style={{
-          width: 40, height: 4, borderRadius: 2, background: '#ccc',
-        }} />
-      </div>
-      {children}
     </div>
   );
 }
