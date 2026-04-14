@@ -152,6 +152,27 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     navigate(`/t/${tripId}/b/${newBranchId}`);
   }
 
+  function handleNewTrip() {
+    navigate('/');
+  }
+
+  async function handleNewBranch() {
+    const name = prompt('Name for the new branch:');
+    if (!name?.trim()) return;
+    const { data, error } = await supabase
+      .from('branches')
+      .insert({ trip_id: tripId, name: name.trim() })
+      .select()
+      .single();
+    if (error) {
+      setStatus(`Failed: ${error.message}`);
+      setTimeout(() => setStatus(''), 3000);
+      return;
+    }
+    setBranches(prev => [...prev, data]);
+    navigate(`/t/${tripId}/b/${data.id}`);
+  }
+
   return (
     <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
       {/* Layer 1: Map */}
@@ -179,6 +200,8 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             onTripNameChange={handleTripNameChange}
             onBranchNameChange={handleBranchNameChange}
             onShare={handleShare}
+            onNewTrip={handleNewTrip}
+            onNewBranch={handleNewBranch}
           />
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px 80px', minHeight: 0 }}>
