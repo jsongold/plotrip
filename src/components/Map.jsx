@@ -4,7 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import { useCatalogLoader } from '../hooks/useCatalogLoader';
 import { useItineraryRender } from '../hooks/useItineraryRender';
 import { useFilter } from '../context/FilterContext';
-import { getFilter, getLayerFilters } from '../lib/filters/registry';
+import { getFilter, getLayerFilters, getOrbitFilters } from '../lib/filters/registry';
+import { mountOrbitLayer } from '../lib/filters/badgeLayer';
 
 // Aliased to avoid name collision with the Map component defined below
 const NativeMap = globalThis.Map;
@@ -28,6 +29,7 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
   const citiesRef = useRef(cities);
   const didInitialViewRef = useRef(false);
   const filterLayersRef = useRef(/** @type {Map<string, any>} */ (new NativeMap()));
+  const orbitLayerRef = useRef(/** @type {any} */ (null));
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
   useEffect(() => { citiesRef.current = cities; }, [cities]);
@@ -50,6 +52,11 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
     catalogLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
+    // CityPinPopup が開いたら FilterBar を閉じる
+    map.on('popupopen', () => {
+      window.dispatchEvent(new CustomEvent('plotrip:closefilters'));
+    });
+
     // Total days control (top-right)
     const TotalDays = L.Control.extend({
       onAdd() {
@@ -68,12 +75,19 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
         try { entry.cleanup?.(); } catch {}
       }
       filterLayersRef.current.clear();
+      if (orbitLayerRef.current) {
+        try { orbitLayerRef.current.cleanup?.(); } catch {}
+        try { orbitLayerRef.current.layerGroup?.remove(); } catch {}
+        orbitLayerRef.current = null;
+      }
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
   // Filter layer管理: activeFilters/month/filterValues の変化に追従
+  // - kind='layer'/'both': 従来通り filter ごとに独立 layer (climate polygon 等)
+  // - kind='orbit': 全 active orbit filter を 1 本の unified orbit layer に集約
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -83,7 +97,7 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
       allLayerFilters.filter((f) => activeFilters.has(f.slug)).map((f) => f.slug)
     );
 
-    // 1) 無効化された layer を cleanup
+    // 1) 無効化された per-filter layer を cleanup
     for (const [slug, entry] of layers.entries()) {
       if (!activeLayerSlugs.has(slug)) {
         try { entry.cleanup?.(); } catch (e) { /* silent */ }
@@ -92,15 +106,13 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
       }
     }
 
-    // 2) 新規 active layer を mount (cities は citiesRef.current から取得)
+    // 2) per-filter layer (climate 等) mount
     for (const slug of activeLayerSlugs) {
       const existing = layers.get(slug);
       const def = getFilter(slug);
       if (!def || typeof def.mountLayer !== 'function') continue;
 
       const currentValue = filterValues.get(slug);
-
-      // dependsOnMonth / dependsOnValue の filter は既存を落として再 mount
       const needsRemount = existing && (
         (def.dependsOnMonth && existing.mountedMonth !== month) ||
         (def.dependsOnValue && existing.mountedValue !== currentValue)
@@ -110,7 +122,7 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
         try { existing.layerGroup?.remove(); } catch (e) {}
         layers.delete(slug);
       } else if (existing) {
-        continue; // すでに mount 済み、再 mount 不要
+        continue;
       }
 
       const layerGroup = L.layerGroup().addTo(map);
@@ -131,6 +143,35 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
         mountedMonth: month,
         mountedValue: currentValue,
       });
+    }
+
+    // 3) Unified orbit layer: 全 active orbit filter を 1 本に束ねて mount
+    const activeOrbitFilters = getOrbitFilters().filter((f) => activeFilters.has(f.slug));
+    const orbitSlugSig = activeOrbitFilters.map((f) => f.slug).sort().join(',');
+    const orbitValueSig = activeOrbitFilters
+      .map((f) => `${f.slug}=${filterValues?.get?.(f.slug) ?? ''}`)
+      .sort()
+      .join(';');
+    const orbitKey = `filters=${orbitSlugSig}|m=${month}|v=${orbitValueSig}`;
+
+    if (orbitLayerRef.current && orbitLayerRef.current.key !== orbitKey) {
+      try { orbitLayerRef.current.cleanup?.(); } catch {}
+      try { orbitLayerRef.current.layerGroup?.remove(); } catch {}
+      orbitLayerRef.current = null;
+    }
+    if (activeOrbitFilters.length > 0 && !orbitLayerRef.current) {
+      const layerGroup = L.layerGroup().addTo(map);
+      let cleanup;
+      try {
+        cleanup = mountOrbitLayer(
+          map,
+          { layerGroup, month, values: filterValues },
+          { filters: activeOrbitFilters }
+        );
+      } catch (e) {
+        console.warn('[Map] orbit layer mount failed:', e?.message || e);
+      }
+      orbitLayerRef.current = { layerGroup, cleanup, key: orbitKey };
     }
   }, [activeFilters, month, filterValues]);
 

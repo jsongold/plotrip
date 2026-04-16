@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { bump } from '../../lib/haptics';
+import { CalendarIcon } from './icons';
 
-const MONTH_LABELS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const MONTH_LABELS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export function MonthDial({ month, onChange }) {
   const [open, setOpen] = useState(false);
@@ -20,37 +21,38 @@ export function MonthDial({ month, onChange }) {
     <div ref={rootRef} style={{ position: 'relative', flex: '0 0 auto', pointerEvents: 'auto' }}>
       <button
         type="button"
-        aria-label="月を選択"
+        aria-label={`Select month (${MONTH_LABELS_SHORT[month - 1]})`}
         aria-expanded={open}
-        onClick={() => { bump(); setOpen(v => !v); }}
+        title={MONTH_LABELS_SHORT[month - 1]}
+        onClick={() => { bump(); setOpen((v) => !v); }}
         style={{
-          height: 44, padding: '0 14px',
-          borderRadius: 'var(--r-pill, 9999px)',
-          border: '1.5px solid var(--border)',
-          background: 'var(--surface, #fff)',
-          color: 'var(--text, #111)',
-          fontSize: 14, fontWeight: 600,
+          width: 44, height: 44,
+          borderRadius: 10,
+          border: `1px solid ${open ? '#000' : 'rgba(0,0,0,0.08)'}`,
+          background: open ? '#000' : '#fff',
+          color: open ? '#fff' : '#000',
           cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          padding: 0,
           boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
-          display: 'inline-flex', alignItems: 'center', gap: 4,
+          transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
-        <span aria-hidden="true">📅</span>
-        {MONTH_LABELS[month - 1]}
+        <CalendarIcon size={24} />
       </button>
       {open && (
         <div style={{
           position: 'absolute',
-          bottom: 'calc(100% + 8px)', left: 0,
-          display: 'grid', gridTemplateColumns: 'repeat(4, 56px)',
+          bottom: 'calc(100% + 8px)', right: 0,
+          display: 'grid', gridTemplateColumns: 'repeat(4, 64px)',
           gap: 4, padding: 8,
-          background: 'var(--surface, #fff)',
-          border: '1px solid var(--border)',
+          background: '#fff',
+          border: '1px solid rgba(0,0,0,0.08)',
           borderRadius: 12,
           boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
           zIndex: 2000,
         }}>
-          {MONTH_LABELS.map((lbl, i) => {
+          {MONTH_LABELS_SHORT.map((lbl, i) => {
             const m = i + 1;
             const sel = m === month;
             return (
@@ -60,10 +62,10 @@ export function MonthDial({ month, onChange }) {
                 onClick={() => { bump(); onChange(m); setOpen(false); }}
                 style={{
                   height: 36, borderRadius: 8,
-                  border: `1px solid ${sel ? 'var(--accent)' : 'var(--border)'}`,
-                  background: sel ? 'var(--accent)' : 'var(--surface-2, #fafafa)',
-                  color: sel ? '#fff' : 'var(--text, #111)',
-                  fontSize: 13, fontWeight: sel ? 600 : 500,
+                  border: `1px solid ${sel ? 'var(--accent)' : 'rgba(0,0,0,0.1)'}`,
+                  background: sel ? 'var(--accent)' : 'transparent',
+                  color: '#000',
+                  fontSize: 13, fontWeight: sel ? 700 : 500,
                   cursor: 'pointer',
                   padding: 0,
                 }}
