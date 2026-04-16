@@ -17,7 +17,7 @@ delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
 export function Map({ cities, onCitySelect, focusRequest }) {
-  const { activeFilters, month } = useFilter();
+  const { activeFilters, month, filterValues } = useFilter();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markerLayerRef = useRef(null);
@@ -73,7 +73,7 @@ export function Map({ cities, onCitySelect, focusRequest }) {
     };
   }, []);
 
-  // Filter layer管理: activeFilters/month/cities の変化に追従
+  // Filter layer管理: activeFilters/month/filterValues の変化に追従
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -98,8 +98,14 @@ export function Map({ cities, onCitySelect, focusRequest }) {
       const def = getFilter(slug);
       if (!def || typeof def.mountLayer !== 'function') continue;
 
-      // dependsOnMonth の filter は既存を一度落として再 mount (月変更時)
-      if (existing && def.dependsOnMonth) {
+      const currentValue = filterValues.get(slug);
+
+      // dependsOnMonth / dependsOnValue の filter は既存を落として再 mount
+      const needsRemount = existing && (
+        (def.dependsOnMonth && existing.mountedMonth !== month) ||
+        (def.dependsOnValue && existing.mountedValue !== currentValue)
+      );
+      if (needsRemount) {
         try { existing.cleanup?.(); } catch (e) {}
         try { existing.layerGroup?.remove(); } catch (e) {}
         layers.delete(slug);
@@ -110,13 +116,23 @@ export function Map({ cities, onCitySelect, focusRequest }) {
       const layerGroup = L.layerGroup().addTo(map);
       let cleanup;
       try {
-        cleanup = def.mountLayer(map, { month, cities: citiesRef.current, layerGroup });
+        cleanup = def.mountLayer(map, {
+          month,
+          value: currentValue,
+          cities: citiesRef.current,
+          layerGroup,
+        });
       } catch (e) {
         console.warn(`[Map] filter ${slug} mountLayer failed:`, e?.message || e);
       }
-      layers.set(slug, { layerGroup, cleanup });
+      layers.set(slug, {
+        layerGroup,
+        cleanup,
+        mountedMonth: month,
+        mountedValue: currentValue,
+      });
     }
-  }, [activeFilters, month]);
+  }, [activeFilters, month, filterValues]);
 
   // If cities arrive AFTER map init, center on first destination
   useEffect(() => {

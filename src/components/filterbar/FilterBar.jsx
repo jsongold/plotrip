@@ -2,9 +2,10 @@ import { useFilter } from '../../context/FilterContext';
 import { getAllFilters } from '../../lib/filters/registry';
 import { FilterIcon } from './FilterIcon';
 import { MonthDial } from './MonthDial';
+import { SelectionDial } from './SelectionDial';
 
 export function FilterBar() {
-  const { activeFilters, month, toggle, setMonth } = useFilter();
+  const { activeFilters, month, toggle, setMonth, getFilterValue, setFilterValue } = useFilter();
   const filters = getAllFilters();
 
   return (
@@ -43,7 +44,26 @@ export function FilterBar() {
             (no filters registered yet)
           </span>
         ) : (
-          filters.map((f) => (
+          filters.map((f) => f.options ? (
+            <SelectionDial
+              key={f.slug}
+              slug={f.slug}
+              label={f.label}
+              icon={f.icon}
+              options={f.options}
+              active={activeFilters.has(f.slug)}
+              value={getFilterValue(f.slug) ?? null}
+              onToggleOpen={(open) => {
+                const isOn = activeFilters.has(f.slug);
+                if (open && !isOn) toggle(f.slug);
+                else if (!open && isOn) {
+                  toggle(f.slug);
+                  setFilterValue(f.slug, null);
+                }
+              }}
+              onChangeValue={(v) => setFilterValue(f.slug, v)}
+            />
+          ) : (
             <FilterIcon
               key={f.slug}
               slug={f.slug}
