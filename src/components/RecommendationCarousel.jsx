@@ -4,9 +4,10 @@ import { useFilter } from '../context/FilterContext';
 import { supabase } from '../lib/supabase';
 import { haversineKm } from '../lib/distance';
 
-export function RecommendationCarousel({ origin, onClose, onFocusCity }) {
+export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity }) {
   const { activeFilters, filterValues } = useFilter();
   const [candidates, setCandidates] = useState(null);
+  const [activeIdx, setActiveIdx] = useState(0);
   const scrollerRef = useRef(null);
 
   // Serialize filter state so useEffect deps are stable primitives.
@@ -74,6 +75,32 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity }) {
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (scroller) scroller.scrollLeft = 0;
+    setActiveIdx(0);
+  }, [candidates]);
+
+  // Track which card is centered in the viewport (for placing the close
+  // button on the active card only — no map pan side effect).
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || !candidates || candidates.length === 0) return;
+    const cards = scroller.querySelectorAll('[data-rec-card]');
+    if (!cards.length) return;
+    const ratios = new Map();
+    const obs = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const idx = Number(e.target.getAttribute('data-idx'));
+        if (e.isIntersecting) ratios.set(idx, e.intersectionRatio);
+        else ratios.delete(idx);
+      }
+      let bestIdx = -1;
+      let bestRatio = -1;
+      for (const [idx, r] of ratios.entries()) {
+        if (r > bestRatio) { bestRatio = r; bestIdx = idx; }
+      }
+      if (bestIdx >= 0) setActiveIdx(bestIdx);
+    }, { root: scroller, threshold: [0.5, 0.75, 0.9] });
+    cards.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
   }, [candidates]);
 
   // Publish the carousel's top-edge distance-from-viewport-bottom as a CSS
@@ -109,24 +136,21 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity }) {
 
   const closeBtnStyle = {
     position: 'absolute',
-    top: -40,
-    right: 16,
-    width: 28,
-    height: 28,
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
     borderRadius: '50%',
-    background: 'rgba(17, 17, 17, 0.72)',
-    backdropFilter: 'blur(8px)',
-    WebkitBackdropFilter: 'blur(8px)',
+    background: 'transparent',
     color: '#fff',
     border: 'none',
     cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 0,
-    pointerEvents: 'auto',
-    transition: 'background 120ms ease, transform 120ms ease',
+    zIndex: 2,
+    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))',
   };
 
   const scrollerStyle = {
@@ -146,23 +170,26 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity }) {
     borderRadius: 12,
     boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
     overflow: 'hidden',
+    position: 'relative',
   };
+
+  const renderCloseBtn = () => (
+    <button
+      type="button"
+      aria-label="Close recommendations"
+      title="Close"
+      onClick={(e) => { e.stopPropagation(); onClose?.(); }}
+      style={closeBtnStyle}
+    >
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18" />
+        <line x1="18" y1="6" x2="6" y2="18" />
+      </svg>
+    </button>
+  );
 
   return (
     <div ref={outerRef} style={outerStyle}>
-      <button
-        type="button"
-        aria-label="Close recommendations"
-        title="Close"
-        onClick={onClose}
-        style={closeBtnStyle}
-      >
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-
       <div ref={scrollerRef} style={scrollerStyle}>
         {candidates == null && (
           <div
@@ -211,7 +238,11 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity }) {
             onClick={() => onFocusCity?.(c)}
             style={{ ...cardWrapperStyle, cursor: 'pointer' }}
           >
-            <CityPinPopup city={c} />
+            <CityPinPopup
+              city={c}
+              onAdd={onAddCity ? () => { onAddCity(c); onClose?.(); } : undefined}
+            />
+            {i === activeIdx && renderCloseBtn()}
           </div>
         ))}
       </div>

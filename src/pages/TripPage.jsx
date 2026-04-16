@@ -230,6 +230,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           origin={recommendFor}
           onClose={() => setRecommendFor(null)}
           onFocusCity={(c) => setFocusRequest({ lat: c.lat, lng: c.lng, _tick: Date.now() })}
+          onAddCity={(c) => handleAdd({ name: c.name, lat: c.lat, lng: c.lng, country: c.country })}
         />
       )}
       </div>
