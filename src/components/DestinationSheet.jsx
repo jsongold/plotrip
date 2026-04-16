@@ -59,9 +59,20 @@ export function DestinationSheet({ open, onClose, header, children }) {
     setOffsetY(nearest);
   }
 
-  if (!open && offsetY === 0) return null;
-
+  const shouldRender = open || offsetY !== 0;
   const visibleHeight = Math.max(0, sheetHeight - offsetY);
+
+  // Expose sheet's top offset (distance from viewport bottom) as CSS var so
+  // floating icons can ride on top of the sheet.
+  useEffect(() => {
+    const value = shouldRender ? `${visibleHeight}px` : '0px';
+    document.documentElement.style.setProperty('--dest-sheet-top', value);
+    return () => {
+      document.documentElement.style.setProperty('--dest-sheet-top', '0px');
+    };
+  }, [visibleHeight, shouldRender]);
+
+  if (!shouldRender) return null;
 
   return (
     <div style={{

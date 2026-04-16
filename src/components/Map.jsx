@@ -17,7 +17,7 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
-export function Map({ cities, onCitySelect, focusRequest, showTooltips = true }) {
+export function Map({ cities, onCitySelect, onRecommend, focusRequest, showTooltips = true }) {
   const { activeFilters, month, filterValues } = useFilter();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -25,13 +25,16 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
   const lineLayerRef = useRef(null);
   const catalogLayerRef = useRef(null);
   const onCitySelectRef = useRef(onCitySelect);
+  const onRecommendRef = useRef(onRecommend);
   const totalDaysRef = useRef(null);
   const citiesRef = useRef(cities);
   const didInitialViewRef = useRef(false);
   const filterLayersRef = useRef(/** @type {Map<string, any>} */ (new NativeMap()));
   const orbitLayerRef = useRef(/** @type {any} */ (null));
+  const highlightLayerRef = useRef(null);
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
+  useEffect(() => { onRecommendRef.current = onRecommend; }, [onRecommend]);
   useEffect(() => { citiesRef.current = cities; }, [cities]);
 
   // Init map once
@@ -50,6 +53,7 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
     markerLayerRef.current = L.layerGroup().addTo(map);
     lineLayerRef.current = L.layerGroup().addTo(map);
     catalogLayerRef.current = L.layerGroup().addTo(map);
+    highlightLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
     // CityPinPopup が開いたら FilterBar を閉じる
@@ -194,7 +198,8 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
     map.setView([first.lat, first.lng], 5, { animate: false });
   }, [cities]);
 
-  // Focus map on a city when parent sends a new focusRequest
+  // Focus map on a city when parent sends a new focusRequest.
+  // Also render a red highlight pin at that location.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !focusRequest) return;
@@ -203,10 +208,23 @@ export function Map({ cities, onCitySelect, focusRequest, showTooltips = true })
     map.invalidateSize();
     const targetZoom = Math.max(map.getZoom(), 7);
     map.setView([lat, lng], targetZoom, { animate: true });
+
+    const hl = highlightLayerRef.current;
+    if (hl) {
+      hl.clearLayers();
+      L.circleMarker([lat, lng], {
+        radius: 7,
+        color: '#fff',
+        weight: 2,
+        fillColor: '#ef4444',
+        fillOpacity: 1,
+        interactive: false,
+      }).addTo(hl);
+    }
   }, [focusRequest]);
 
-  useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef);
-  useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef);
+  useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRecommendRef);
+  useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, undefined, onRecommendRef);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 }

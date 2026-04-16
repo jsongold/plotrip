@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet-arrowheads';
 import { mountCityPinPopup } from '../components/CityPinPopup';
 
-export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onDestinationTap) {
+export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onDestinationTap, onRecommendRef) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -41,9 +41,13 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
         .addTo(markerLayerRef.current);
 
       const openPopup = () => {
+        const onRecommend = () => {
+          onRecommendRef?.current?.({ id: null, name: c.name, country: c.country, lat: c.lat, lng: c.lng });
+          try { map.closePopup(); } catch {}
+        };
         const content = mountCityPinPopup(
-          { id: null, name: c.name, country: c.country },
-          {} // view-only: no onAdd, so no red pin button
+          { id: null, name: c.name, country: c.country, lat: c.lat, lng: c.lng },
+          { onRecommend } // view-only: no onAdd, so no red pin button
         );
         const popup = L.popup({
           closeButton: true,

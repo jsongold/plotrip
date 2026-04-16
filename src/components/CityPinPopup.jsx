@@ -11,7 +11,7 @@ function PinIcon() {
   );
 }
 
-export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd }) {
+export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, onRecommend }) {
   const ref = useCityMeta(city, { month });
   const metaFields = forSlot('pinMeta')
     .map((f) => renderField(ref, f, { month }))
@@ -21,6 +21,7 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd })
 
   const [wiki, setWiki] = useState(null);
   const showAdd = typeof onAdd === 'function';
+  const showRecommend = typeof onRecommend === 'function';
 
   useEffect(() => {
     let cancelled = false;
@@ -136,6 +137,44 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd })
           }}
         >
           <PinIcon />
+        </button>
+      )}
+
+      {showRecommend && (
+        <button
+          aria-label="Recommend nearby"
+          title="Recommend nearby"
+          onClick={(e) => { e.stopPropagation(); onRecommend(); }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.08)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(8,145,178,0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(8,145,178,0.4)';
+          }}
+          style={{
+            position: 'absolute',
+            top: 96,
+            right: showAdd ? 64 : 12,
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: '#0891b2',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(8,145,178,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 0,
+            transition: 'transform 120ms ease, box-shadow 120ms ease',
+          }}
+        >
+          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+            <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zm6 12l.9 2.6L21.5 18l-2.6.9L18 21.5l-.9-2.6L14.5 18l2.6-.9L18 14z"/>
+          </svg>
         </button>
       )}
     </div>

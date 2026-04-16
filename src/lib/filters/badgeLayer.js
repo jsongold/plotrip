@@ -55,7 +55,7 @@ export function mountCatalogLayer(map, ctx, config) {
     const minPop = minPopForZoom(zoom);
     const { data: catalog, error: catErr } = await supabase
       .from('catalog_cities')
-      .select('id,name,lat,lng')
+      .select('id,name,lat,lng,climate_poly')
       .gte('lat', bounds.getSouth())
       .lte('lat', bounds.getNorth())
       .gte('lng', bounds.getWest())
