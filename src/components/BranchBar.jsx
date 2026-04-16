@@ -13,6 +13,7 @@ export function BranchBar({
   onShare,
   onNewTrip,
   onNewBranch,
+  onCompare,
 }) {
   const currentBranch = branches?.find((b) => b.id === currentBranchId);
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
@@ -62,6 +63,32 @@ export function BranchBar({
 
       {/* Spacer */}
       <span style={{ flex: 1 }} />
+
+      {/* Compare branches (visible only when ≥ 2 branches exist) */}
+      {branches && branches.length >= 2 && onCompare && (
+        <button
+          type="button"
+          onClick={() => onCompare()}
+          title="Compare branches"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            padding: 6,
+            cursor: 'pointer',
+            color: 'var(--text-muted)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7 16H3l4-4" />
+            <path d="M3 16l4 4" />
+            <path d="M17 8h4l-4-4" />
+            <path d="M21 8l-4 4" />
+          </svg>
+        </button>
+      )}
 
       {/* Share button (far right) */}
       <ShareIcon onClick={() => onShare?.()} />

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { calcDateObj, formatDate, toIso, formatDayOfWeek, isWeekend, isHoliday } from '../lib/date-utils';
 
 export function CityListItem({
@@ -10,6 +9,7 @@ export function CityListItem({
   onFork,
   onDaysChange,
   onStartDateChange,
+  onCityTap,
   editingDate,
   setEditingDate,
   dragHandleProps,
@@ -17,7 +17,6 @@ export function CityListItem({
   innerRef,
   isDragging,
 }) {
-  const [editingDays, setEditingDays] = useState(false);
   return (
     <li
       ref={innerRef}
@@ -46,8 +45,15 @@ export function CityListItem({
         ≡
       </span>
 
-      {/* Name + country */}
-      <span style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 14, minWidth: 0 }}>
+      {/* Name + country (tap to focus map) */}
+      <span
+        onClick={onCityTap ? () => onCityTap(c) : undefined}
+        style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          fontSize: 14, minWidth: 0,
+          cursor: onCityTap ? 'pointer' : 'default',
+        }}
+      >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
         <span style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.country || '\u00A0'}</span>
       </span>
@@ -118,42 +124,32 @@ export function CityListItem({
             </span>
           );
         })()}
-        {/* Days picker: tap to edit inline */}
-        {editingDays ? (
-          <input
-            type="number"
-            inputMode="numeric"
-            autoFocus
-            min={0}
-            max={99}
-            defaultValue={c.days ?? 1}
-            onBlur={(e) => {
-              setEditingDays(false);
-              const v = parseInt(e.target.value, 10);
-              if (!Number.isNaN(v) && v >= 0 && v <= 99) onDaysChange(i, v);
-            }}
-            onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur(); }}
+        {/* Days picker */}
+        <span style={{ position: 'relative', display: 'inline-flex' }}>
+          <select
+            value={c.days ?? 1}
+            onChange={(e) => onDaysChange(i, parseInt(e.target.value, 10))}
             style={{
-              width: 40, height: 26, textAlign: 'center',
-              fontSize: 15, fontWeight: 600,
-              border: '1px solid #2563eb', borderRadius: 4,
-              padding: 0, outline: 'none',
-            }}
-          />
-        ) : (
-          <span
-            onClick={() => setEditingDays(true)}
-            style={{
-              minWidth: 28, height: 26, textAlign: 'center',
-              fontSize: 15, fontWeight: 600, lineHeight: '26px',
-              border: '1px solid #ddd', borderRadius: 4,
-              padding: '0 6px', background: '#fafafa', color: '#333',
-              cursor: 'pointer',
+              position: 'absolute', inset: 0, opacity: 0,
+              width: '100%', height: '100%', cursor: 'pointer',
+              fontSize: 16,
             }}
           >
+            <option value={0}>0</option>
+            {Array.from({ length: 30 }, (_, n) => n + 1).map(n => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+          <span style={{
+            minWidth: 28, height: 26, textAlign: 'center',
+            fontSize: 15, fontWeight: 600, lineHeight: '26px',
+            border: '1px solid #ddd', borderRadius: 4,
+            padding: '0 6px', background: '#fafafa', color: '#333',
+            pointerEvents: 'none',
+          }}>
             {c.days ?? 1}
           </span>
-        )}
+        </span>
       </span>
 
       {/* Action buttons */}

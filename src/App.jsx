@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from './hooks/useRouter';
 import { HomePage } from './pages/HomePage';
+import { DiscoverPage } from './pages/DiscoverPage';
 import { TripPage } from './pages/TripPage';
 import { supabase } from './lib/supabase';
 
@@ -40,9 +41,16 @@ function ShortRedirect({ code }) {
 export default function App() {
   const { page, tripId, branchId, code, navigate, replace } = useRouter();
 
+  const lockedHeight = page === 'trip' || page === 'short';
   return (
-    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', background: '#f5f5f5' }}>
-      {page === 'home' && <HomePage navigate={navigate} />}
+    <div style={{
+      ...(lockedHeight ? { height: '100dvh', overflow: 'hidden' } : { minHeight: '100dvh' }),
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'var(--bg)',
+    }}>
+      {page === 'home' && <DiscoverPage navigate={navigate} />}
+      {page === 'new' && <HomePage navigate={navigate} />}
       {page === 'trip' && (
         <TripPage
           tripId={tripId}

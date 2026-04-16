@@ -8,6 +8,7 @@ function parsePath(pathname) {
   if (m) return { page: 'trip', tripId: m[1], branchId: m[2] || null, code: null };
   const s = pathname.match(SHORT_RE);
   if (s) return { page: 'short', tripId: null, branchId: null, code: s[1] };
+  if (pathname === '/new') return { page: 'new', tripId: null, branchId: null, code: null };
   return { page: 'home', tripId: null, branchId: null, code: null };
 }
 

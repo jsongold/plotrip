@@ -5,9 +5,12 @@ import { CityList } from '../components/CityList';
 import { BranchBar } from '../components/BranchBar';
 import { PasswordGate } from '../components/PasswordGate';
 import { DestinationSheet } from '../components/DestinationSheet';
+import { CompareView } from '../components/CompareView';
 import { useBranch } from '../hooks/useBranch';
 import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/useTrip';
 import { useTripHandlers } from '../hooks/useTripHandlers';
+import { FilterProvider } from '../context/FilterContext';
+import { FilterBar } from '../components/filterbar/FilterBar';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -19,7 +22,15 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     useBranch(branchId, branches);
   const [status, setStatus] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
+  const [compareBranchId, setCompareBranchId] = useState(null);
+  const [focusRequest, setFocusRequest] = useState(null);
   const startDate = trip?.start_date || null;
+
+  const handleCityTap = (city) => {
+    if (city?.lat == null || city?.lng == null) return;
+    setFocusRequest({ lat: city.lat, lng: city.lng, _tick: Date.now() });
+    setPanelOpen(false);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -80,12 +91,14 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   }
 
   return (
-    <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
+    <FilterProvider>
+      <div style={{ position: 'relative', height: '100dvh', overflow: 'hidden' }}>
       {/* Layer 1: Map */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
         <Map
           cities={cities}
           onCitySelect={handleAdd}
+          focusRequest={focusRequest}
         />
       </div>
 
@@ -108,12 +121,16 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
               onShare={handleShare}
               onNewTrip={handleNewTrip}
               onNewBranch={handleNewBranch}
+              onCompare={() => {
+                const other = branches.find((b) => b.id !== branchId);
+                if (other) setCompareBranchId(other.id);
+              }}
             />
           </div>
         }
       >
         <div style={{ padding: '8px 16px 100px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} />
         </div>
       </DestinationSheet>
 
@@ -123,23 +140,22 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           onClick={() => setPanelOpen(true)}
           title="Show destinations"
           style={{
-            position: 'fixed', left: '50%', transform: 'translateX(-50%)',
+            position: 'fixed', left: '50%',
             bottom: 'calc(70px + env(safe-area-inset-bottom))',
+            transform: 'translateX(-50%)',
             zIndex: 1000,
-            width: 36, height: 36, borderRadius: '50%',
+            width: 64, height: 64,
             border: 'none', background: 'transparent', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-            color: '#333',
-            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+            color: '#444',
           }}
         >
-          <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10" />
-            <ellipse cx="12" cy="12" rx="4" ry="10" />
-            <line x1="2" y1="12" x2="22" y2="12" />
+          <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 14l6-6 6 6" />
           </svg>
         </button>
       )}
+      <FilterBar />
       <div style={{
         position: 'fixed', left: 0, right: 0,
         bottom: 'calc(24px + env(safe-area-inset-bottom))',
@@ -148,6 +164,16 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       }}>
         <Toolbar onAdd={handleAdd} status={status} />
       </div>
-    </div>
+
+      {compareBranchId && (
+        <CompareView
+          tripId={tripId}
+          branchAId={branchId}
+          branchBId={compareBranchId}
+          onClose={() => setCompareBranchId(null)}
+        />
+      )}
+      </div>
+    </FilterProvider>
   );
 }
