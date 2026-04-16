@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { supabase } from '../lib/supabase';
 import { mountCityPinPopup } from '../components/CityPinPopup';
+import { maxPinsForMap } from '../lib/mapDensity';
 
 // Min population thresholds by zoom level
 export function minPopForZoom(zoom) {
@@ -28,13 +29,21 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
     const bounds = map.getBounds();
     const zoom = map.getZoom();
     const minPop = minPopForZoom(zoom);
+    // 小ドットなので密に置ける (pxPerPin 10000 = 1ドット 100×100 相当に余白)
+    const maxPins = maxPinsForMap(map, { pxPerPin: 10000, max: 150, minZoom: 3 });
+
+    const catalog = catalogLayerRef.current;
+    if (maxPins <= 0) {
+      catalog.clearLayers();
+      return;
+    }
 
     const south = bounds.getSouth();
     const north = bounds.getNorth();
     const west = bounds.getWest();
     const east = bounds.getEast();
 
-    let query = supabase
+    const { data, error } = await supabase
       .from('catalog_cities')
       .select('id,name,lat,lng,country')
       .gte('lat', south)
@@ -43,12 +52,9 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
       .lte('lng', east)
       .gte('population', minPop)
       .order('population', { ascending: false })
-      .limit(500);
-
-    const { data, error } = await query;
+      .limit(maxPins);
     if (controller.signal.aborted || error) return;
 
-    const catalog = catalogLayerRef.current;
     catalog.clearLayers();
 
     (data || []).forEach(({ id, name, lat, lng, country }) => {

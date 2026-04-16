@@ -148,3 +148,8 @@ html, body {
   width: auto !important;
   line-height: inherit;
 }
+
+/* Toggle destination tooltip visibility */
+.hide-tooltips .leaflet-tooltip {
+  display: none !important;
+}
