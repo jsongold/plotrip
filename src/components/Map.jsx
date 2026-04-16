@@ -207,7 +207,19 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, showToolt
     if (lat == null || lng == null) return;
     map.invalidateSize();
     const targetZoom = Math.max(map.getZoom(), 7);
-    map.setView([lat, lng], targetZoom, { animate: true });
+
+    // If a bottom overlay (carousel) is open, shift the target point south
+    // at pixel-level so the pin sits in the visible map area above it.
+    const recTop = parseFloat(
+      getComputedStyle(document.documentElement).getPropertyValue('--rec-carousel-top')
+    ) || 0;
+    if (recTop > 0) {
+      const pinPt = map.project([lat, lng], targetZoom);
+      const newCenter = map.unproject(pinPt.add([0, recTop / 2]), targetZoom);
+      map.setView(newCenter, targetZoom, { animate: true });
+    } else {
+      map.setView([lat, lng], targetZoom, { animate: true });
+    }
 
     const hl = highlightLayerRef.current;
     if (hl) {
@@ -224,7 +236,7 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, showToolt
   }, [focusRequest]);
 
   useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRecommendRef);
-  useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, undefined, onRecommendRef);
+  useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onRecommendRef);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 }
