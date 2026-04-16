@@ -16,7 +16,7 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
-export function Map({ cities, onCitySelect, focusRequest }) {
+export function Map({ cities, onCitySelect, focusRequest, showTooltips = true }) {
   const { activeFilters, month, filterValues } = useFilter();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -133,6 +133,13 @@ export function Map({ cities, onCitySelect, focusRequest }) {
       });
     }
   }, [activeFilters, month, filterValues]);
+
+  // Toggle tooltip visibility via CSS class on container
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.classList.toggle('hide-tooltips', !showTooltips);
+  }, [showTooltips]);
 
   // If cities arrive AFTER map init, center on first destination
   useEffect(() => {

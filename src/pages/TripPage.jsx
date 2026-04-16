@@ -24,6 +24,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [compareBranchId, setCompareBranchId] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
+  const [showTooltips, setShowTooltips] = useState(true);
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -99,6 +100,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           cities={cities}
           onCitySelect={handleAdd}
           focusRequest={focusRequest}
+          showTooltips={showTooltips}
         />
       </div>
 
@@ -156,6 +158,32 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         </button>
       )}
       <FilterBar />
+      <button
+        onClick={() => setShowTooltips((v) => !v)}
+        aria-label={showTooltips ? 'ツールチップを隠す' : 'ツールチップを表示'}
+        aria-pressed={!showTooltips}
+        title={showTooltips ? 'Hide labels' : 'Show labels'}
+        style={{
+          position: 'fixed',
+          right: 16,
+          bottom: 'calc(80px + env(safe-area-inset-bottom))',
+          zIndex: 1000,
+          width: 40, height: 40,
+          borderRadius: '50%',
+          border: '1.5px solid var(--border)',
+          background: showTooltips ? 'var(--accent)' : 'var(--surface, #fff)',
+          color: showTooltips ? '#fff' : 'var(--text, #111)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 0, cursor: 'pointer',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
+        }}
+      >
+        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+          <line x1="7" y1="7" x2="7.01" y2="7" />
+        </svg>
+      </button>
       <div style={{
         position: 'fixed', left: 0, right: 0,
         bottom: 'calc(24px + env(safe-area-inset-bottom))',
