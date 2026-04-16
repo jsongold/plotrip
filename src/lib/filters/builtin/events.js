@@ -9,7 +9,7 @@ import { mountCatalogLayer, makeBadgeMarker } from '../badgeLayer';
 
 registerFilter({
   slug: 'events',
-  label: 'イベント',
+  label: 'Events',
   icon: '🎉',
   kind: 'layer',
   dependsOnMonth: true,

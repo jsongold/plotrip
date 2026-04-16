@@ -1,28 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { bump } from '../../lib/haptics';
+import { FilterSlugIcon } from './icons';
 
 /**
- * Cost / Vibes 等、options 付き filter 用の円形ボタン + 上方向 popup。
- *
- * - icon tap で active を toggle (popup 表示と連動)
- * - popup 内の option pill で value を選ぶ
- * - popup 外 click で閉じる = filter OFF (value もクリア)
- *
- * @param {{
- *   slug: string,
- *   label: string,
- *   icon: any,
- *   options: Array<{value:string, label:string, icon?:string}>,
- *   active: boolean,
- *   value: string|null,
- *   onToggleOpen: (open:boolean) => void,
- *   onChangeValue: (value:string|null) => void,
- * }} props
+ * Cost / Vibes 等、options 付き filter 用のアイコン + 上方向 popup (level 選択)。
+ * 見た目は透明背景のアイコンのみ。active 時は accent 色。
  */
 export function SelectionDial({
   slug,
   label,
-  icon,
   options,
   active,
   value,
@@ -51,19 +37,17 @@ export function SelectionDial({
         onClick={() => { bump(); onToggleOpen(!active); }}
         style={{
           width: 44, height: 44,
-          borderRadius: '50%',
-          border: `1.5px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-          background: active ? 'var(--accent)' : 'var(--surface, #fff)',
-          color: active ? '#fff' : 'var(--text, #111)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: 10,
+          border: `1px solid ${active ? 'var(--accent)' : 'rgba(0,0,0,0.08)'}`,
+          background: '#fff',
+          color: active ? 'var(--accent)' : '#000',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           padding: 0, cursor: 'pointer', flex: '0 0 auto',
-          boxShadow: active
-            ? '0 4px 12px rgba(37,99,235,0.35)'
-            : '0 2px 8px rgba(0,0,0,0.12)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
-        {icon}
+        <FilterSlugIcon slug={slug} size={24} />
       </button>
 
       {active && (
@@ -73,14 +57,13 @@ export function SelectionDial({
           style={{
             position: 'absolute',
             bottom: 'calc(100% + 8px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            right: 0,
             display: 'flex',
             gap: 6,
             padding: 8,
-            background: 'var(--surface, #fff)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
+            background: '#fff',
+            border: '1px solid rgba(0,0,0,0.08)',
+            borderRadius: 12,
             boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
             zIndex: 2000,
           }}
@@ -99,23 +82,21 @@ export function SelectionDial({
                 }}
                 style={{
                   minWidth: 72,
-                  height: 40,
+                  height: 38,
                   padding: '0 12px',
-                  borderRadius: 999,
-                  border: `1.5px solid ${sel ? 'var(--accent)' : 'var(--border)'}`,
-                  background: sel ? 'var(--accent)' : 'var(--surface-2, #fafafa)',
-                  color: sel ? '#fff' : 'var(--text, #111)',
+                  borderRadius: 8,
+                  border: `1px solid ${sel ? 'var(--accent)' : 'rgba(0,0,0,0.1)'}`,
+                  background: sel ? 'var(--accent)' : 'transparent',
+                  color: '#000',
                   fontSize: 13,
                   fontWeight: sel ? 700 : 500,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 4,
                   whiteSpace: 'nowrap',
                 }}
               >
-                {opt.icon && <span aria-hidden="true">{opt.icon}</span>}
                 {opt.label}
               </button>
             );

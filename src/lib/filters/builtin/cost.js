@@ -8,7 +8,7 @@ import { mountCatalogLayer, makeBadgeMarker } from '../badgeLayer';
  */
 registerFilter({
   slug: 'cost',
-  label: 'コスト',
+  label: 'Cost',
   icon: '💰',
   kind: 'layer',
   order: 40,

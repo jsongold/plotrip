@@ -9,7 +9,7 @@ import { mountCatalogLayer, makeBadgeMarker } from '../badgeLayer';
 
 registerFilter({
   slug: 'vibes',
-  label: 'バイブス',
+  label: 'Vibes',
   icon: '✨',
   kind: 'layer',
   order: 20,

@@ -160,26 +160,26 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       <FilterBar />
       <button
         onClick={() => setShowTooltips((v) => !v)}
-        aria-label={showTooltips ? 'ツールチップを隠す' : 'ツールチップを表示'}
+        aria-label={showTooltips ? 'Hide labels' : 'Show labels'}
         aria-pressed={!showTooltips}
         title={showTooltips ? 'Hide labels' : 'Show labels'}
         style={{
           position: 'fixed',
-          right: 16,
+          right: 72,
           bottom: 'calc(80px + env(safe-area-inset-bottom))',
           zIndex: 1000,
-          width: 40, height: 40,
-          borderRadius: '50%',
-          border: '1.5px solid var(--border)',
-          background: showTooltips ? 'var(--accent)' : 'var(--surface, #fff)',
-          color: showTooltips ? '#fff' : 'var(--text, #111)',
+          width: 44, height: 44,
+          borderRadius: 10,
+          border: `1px solid ${showTooltips ? 'var(--accent)' : 'rgba(0,0,0,0.08)'}`,
+          background: '#fff',
+          color: showTooltips ? 'var(--accent)' : '#000',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 0, cursor: 'pointer',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
-        <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
           <line x1="7" y1="7" x2="7.01" y2="7" />
         </svg>

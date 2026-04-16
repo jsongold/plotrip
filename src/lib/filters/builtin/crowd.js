@@ -11,7 +11,7 @@ import { mountCatalogLayer, makeBadgeMarker } from '../badgeLayer';
 
 registerFilter({
   slug: 'crowd',
-  label: '混雑',
+  label: 'Crowd',
   icon: '👥',
   kind: 'layer',
   dependsOnMonth: true,

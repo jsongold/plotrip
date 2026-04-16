@@ -20,7 +20,7 @@ import { mountCatalogLayer, makeBboxPolygon } from '../badgeLayer';
 
 registerFilter({
   slug: 'climate',
-  label: '気候',
+  label: 'Temperature',
   icon: '🌡️',
   kind: 'layer',
   dependsOnMonth: true,
