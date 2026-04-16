@@ -170,12 +170,12 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           zIndex: 1000,
           width: 44, height: 44,
           borderRadius: 10,
-          border: `1px solid ${showTooltips ? 'var(--accent)' : 'rgba(0,0,0,0.08)'}`,
-          background: '#fff',
-          color: showTooltips ? 'var(--accent)' : '#000',
+          border: `1px solid ${showTooltips ? '#000' : 'rgba(0,0,0,0.08)'}`,
+          background: showTooltips ? '#000' : '#fff',
+          color: showTooltips ? '#fff' : '#000',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 0, cursor: 'pointer',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >

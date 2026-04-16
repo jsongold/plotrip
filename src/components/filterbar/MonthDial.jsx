@@ -28,13 +28,13 @@ export function MonthDial({ month, onChange }) {
         style={{
           width: 44, height: 44,
           borderRadius: 10,
-          border: `1px solid ${open ? 'var(--accent)' : 'rgba(0,0,0,0.08)'}`,
-          background: '#fff',
-          color: open ? 'var(--accent)' : '#000',
+          border: `1px solid ${open ? '#000' : 'rgba(0,0,0,0.08)'}`,
+          background: open ? '#000' : '#fff',
+          color: open ? '#fff' : '#000',
           cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           padding: 0,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
