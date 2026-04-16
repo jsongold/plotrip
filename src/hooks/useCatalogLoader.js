@@ -14,7 +14,7 @@ export function minPopForZoom(zoom) {
   return 500000;
 }
 
-export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
+export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRecommendRef) {
   const loadTimerRef = useRef(null);
   const abortRef = useRef(null);
 
@@ -45,7 +45,7 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
 
     const { data, error } = await supabase
       .from('catalog_cities')
-      .select('id,name,lat,lng,country')
+      .select('id,name,lat,lng,country,climate_poly')
       .gte('lat', south)
       .lte('lat', north)
       .gte('lng', west)
@@ -69,7 +69,11 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
           onCitySelectRef.current({ name, lat, lng, country });
           map.closePopup();
         };
-        const content = mountCityPinPopup({ id, name, country }, { onAdd });
+        const onRecommend = () => {
+          onRecommendRef?.current?.({ id, name, country, lat, lng });
+          try { map.closePopup(); } catch {}
+        };
+        const content = mountCityPinPopup({ id, name, country, lat, lng }, { onAdd, onRecommend });
         const popup = L.popup({
           closeButton: true,
           offset: [0, -6],

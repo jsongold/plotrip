@@ -4,7 +4,7 @@ import { CalendarIcon } from './icons';
 
 const MONTH_LABELS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-export function MonthDial({ month, onChange }) {
+export function MonthDial({ month, onChange, popupDirection = 'up' }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -43,7 +43,10 @@ export function MonthDial({ month, onChange }) {
       {open && (
         <div style={{
           position: 'absolute',
-          bottom: 'calc(100% + 8px)', right: 0,
+          ...(popupDirection === 'down'
+            ? { top: 'calc(100% + 8px)' }
+            : { bottom: 'calc(100% + 8px)' }),
+          right: 0,
           display: 'grid', gridTemplateColumns: 'repeat(4, 64px)',
           gap: 4, padding: 8,
           background: '#fff',

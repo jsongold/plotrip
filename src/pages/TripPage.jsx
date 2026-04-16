@@ -11,6 +11,7 @@ import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/
 import { useTripHandlers } from '../hooks/useTripHandlers';
 import { FilterProvider } from '../context/FilterContext';
 import { FilterBar } from '../components/filterbar/FilterBar';
+import { RecommendationCarousel } from '../components/RecommendationCarousel';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -25,6 +26,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [compareBranchId, setCompareBranchId] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [showTooltips, setShowTooltips] = useState(true);
+  const [recommendFor, setRecommendFor] = useState(null);
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -99,6 +101,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         <Map
           cities={cities}
           onCitySelect={handleAdd}
+          onRecommend={(origin) => { setPanelOpen(false); setRecommendFor(origin); }}
           focusRequest={focusRequest}
           showTooltips={showTooltips}
         />
@@ -192,7 +195,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         style={{
           position: 'fixed',
           right: 72,
-          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px))',
+          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
           zIndex: 1200,
           transition: 'bottom 200ms ease-out',
           width: 44, height: 44,
@@ -219,6 +222,14 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           branchAId={branchId}
           branchBId={compareBranchId}
           onClose={() => setCompareBranchId(null)}
+        />
+      )}
+
+      {recommendFor && (
+        <RecommendationCarousel
+          origin={recommendFor}
+          onClose={() => setRecommendFor(null)}
+          onFocusCity={(c) => setFocusRequest({ lat: c.lat, lng: c.lng, _tick: Date.now() })}
         />
       )}
       </div>

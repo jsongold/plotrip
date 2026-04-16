@@ -14,9 +14,19 @@
  * DB:
  * - city_monthly(city_id integer, month smallint, avg_high_c real, ...)
  */
+import L from 'leaflet';
 import { registerFilter } from '../registry';
 import { supabase } from '../../supabase';
 import { mountCatalogLayer, makeBboxPolygon } from '../badgeLayer';
+
+function makeClimateShape(city, style) {
+  if (city.climate_poly) {
+    return L.geoJSON(city.climate_poly, {
+      style: () => ({ weight: 1.2, fillOpacity: 0.4, interactive: false, ...style }),
+    });
+  }
+  return makeBboxPolygon(city, style);
+}
 
 registerFilter({
   slug: 'climate',
@@ -39,7 +49,7 @@ registerFilter({
       },
       draw(city, tempC) {
         if (tempC == null) {
-          return makeBboxPolygon(city, {
+          return makeClimateShape(city, {
             color: '#9ca3af',
             weight: 1,
             dashArray: '4,4',
@@ -48,7 +58,7 @@ registerFilter({
           });
         }
         const color = climateColor(tempC);
-        return makeBboxPolygon(city, {
+        return makeClimateShape(city, {
           color,
           weight: 1.2,
           fillColor: color,

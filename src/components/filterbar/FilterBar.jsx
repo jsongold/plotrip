@@ -38,7 +38,7 @@ export function FilterBar() {
       style={{
         position: 'fixed',
         right: 16,
-        bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px))',
+        bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
         zIndex: 1200,
         pointerEvents: 'auto',
         transition: 'bottom 200ms ease-out',
