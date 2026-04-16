@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { supabase } from '../lib/supabase';
+import { mountCityPinPopup } from '../components/CityPinPopup';
 
 // Min population thresholds by zoom level
 export function minPopForZoom(zoom) {
@@ -35,7 +36,7 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
 
     let query = supabase
       .from('catalog_cities')
-      .select('name,lat,lng,country')
+      .select('id,name,lat,lng,country')
       .gte('lat', south)
       .lte('lat', north)
       .gte('lng', west)
@@ -50,16 +51,54 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef) {
     const catalog = catalogLayerRef.current;
     catalog.clearLayers();
 
-    (data || []).forEach(({ name, lat, lng, country }) => {
+    (data || []).forEach(({ id, name, lat, lng, country }) => {
       const dot = L.circleMarker([lat, lng], {
         radius: 3, color: '#888', weight: 1,
         fillColor: '#aaa', fillOpacity: 0.7,
         interactive: true, bubblingMouseEvents: false,
       });
-      dot.bindTooltip(country ? `${name}, ${country}` : name, { direction: 'top' });
+
+      const openPopup = () => {
+        const onAdd = () => {
+          onCitySelectRef.current({ name, lat, lng, country });
+          map.closePopup();
+        };
+        const content = mountCityPinPopup({ id, name, country }, { onAdd });
+        const popup = L.popup({
+          closeButton: true,
+          offset: [0, -6],
+          autoPan: true,
+          autoPanPadding: [40, 40],
+          minWidth: 240,
+          maxWidth: 240,
+        })
+          .setLatLng([lat, lng])
+          .setContent(content);
+
+        // Re-run autoPan while content is still loading (thumbnail/text
+        // arrive asynchronously). Stops on first user pan so we never yank
+        // the map back once they've taken control.
+        let ro = null;
+        const stopObserving = () => { ro?.disconnect(); ro = null; };
+        if (typeof ResizeObserver !== 'undefined') {
+          ro = new ResizeObserver(() => { try { popup.update(); } catch {} });
+          ro.observe(content);
+          map.once('dragstart', stopObserving);
+        }
+        popup.on('remove', () => {
+          stopObserving();
+          content._unmount?.();
+        });
+
+        popup.openOn(map);
+      };
+
+      dot.bindTooltip(country ? `${name}, ${country}` : name, {
+        direction: 'top',
+      });
       dot.on('click', (e) => {
         L.DomEvent.stopPropagation(e);
-        onCitySelectRef.current({ name, lat, lng, country });
+        openPopup();
       });
       dot.addTo(catalog);
     });
