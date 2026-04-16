@@ -9,6 +9,7 @@ export function CityListItem({
   onFork,
   onDaysChange,
   onStartDateChange,
+  onCityTap,
   editingDate,
   setEditingDate,
   dragHandleProps,
@@ -44,8 +45,15 @@ export function CityListItem({
         ≡
       </span>
 
-      {/* Name + country */}
-      <span style={{ flex: 1, display: 'flex', flexDirection: 'column', fontSize: 14, minWidth: 0 }}>
+      {/* Name + country (tap to focus map) */}
+      <span
+        onClick={onCityTap ? () => onCityTap(c) : undefined}
+        style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          fontSize: 14, minWidth: 0,
+          cursor: onCityTap ? 'pointer' : 'default',
+        }}
+      >
         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
         <span style={{ fontSize: 11, color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.country || '\u00A0'}</span>
       </span>
