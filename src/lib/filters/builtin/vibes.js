@@ -1,46 +1,53 @@
 /**
- * @file src/lib/filters/builtin/vibes.js
- * Vibes filter — city_tags から各都市の weight 最大 tag を取得し、badge 表示。
- * 密度は viewport-area ベース (mountCatalogLayer のデフォルト)。
+ * Vibes filter — city_tags から weight 最大 tag を orbit segment として提供。
  */
 import { registerFilter } from '../registry';
 import { supabase } from '../../supabase';
-import { mountCatalogLayer, makeBadgeMarker } from '../badgeLayer';
+
+const VIBE_CATEGORIES = {
+  party:  { tags: ['nightlife'],                   emoji: '🎉', color: '#a855f7', label: 'Party' },
+  quiet:  { tags: ['nature', 'outdoors', 'history'], emoji: '🌿', color: '#10b981', label: 'Quiet' },
+  noisy:  { tags: ['shopping', 'food', 'culture'],   emoji: '🔊', color: '#ef4444', label: 'Noisy' },
+};
 
 registerFilter({
   slug: 'vibes',
   label: 'Vibes',
   icon: '✨',
-  kind: 'layer',
+  kind: 'orbit',
   order: 20,
-  mountLayer(map, ctx) {
-    return mountCatalogLayer(map, ctx, {
-      slug: 'vibes',
-      async fetchExtra({ cityIds }) {
-        const { data, error } = await supabase
-          .from('city_tags')
-          .select('city_id, tag, weight')
-          .in('city_id', cityIds)
-          .order('weight', { ascending: false });
-        if (error) throw error;
-        // city_id -> top tag (weight 降順の最初)
-        const map = new Map();
-        for (const row of (data || [])) {
-          if (!map.has(row.city_id)) map.set(row.city_id, row.tag);
-        }
-        return map;
-      },
-      draw(city, tag) {
-        if (!tag) return makeBadgeMarker(city, { label: '—', emoji: '✨', color: '#9ca3af' });
-        const { emoji, color } = tagStyle(tag);
-        return makeBadgeMarker(city, { label: tag, emoji, color });
-      },
-    });
+  options: [
+    { value: 'party', label: 'Party' },
+    { value: 'quiet', label: 'Quiet' },
+    { value: 'noisy', label: 'Noisy' },
+  ],
+  async fetchSegmentData({ cityIds }) {
+    const { data, error } = await supabase
+      .from('city_tags')
+      .select('city_id, tag, weight')
+      .in('city_id', cityIds)
+      .order('weight', { ascending: false });
+    if (error) throw error;
+    const topTag = new Map();
+    for (const row of (data || [])) {
+      if (!topTag.has(row.city_id)) topTag.set(row.city_id, row.tag);
+    }
+    return topTag;
+  },
+  toSegment(tag, { value } = {}) {
+    if (!tag) return null;
+    if (value) {
+      const cat = VIBE_CATEGORIES[value];
+      if (!cat) return null;
+      if (!cat.tags.includes(tag)) return null;
+      return { emoji: cat.emoji, color: cat.color, label: cat.label };
+    }
+    const style = tagStyle(tag);
+    return { emoji: style.emoji, color: style.color, label: tag };
   },
 });
 
 function tagStyle(tag) {
-  // 頻出 tag に固有 emoji/color を、それ以外はデフォルト
   const map = {
     food:      { emoji: '🍜', color: '#f97316' },
     nightlife: { emoji: '🌃', color: '#a855f7' },

@@ -14,6 +14,7 @@ export function SelectionDial({
   value,
   onToggleOpen,
   onChangeValue,
+  popupDirection = 'up',
 }) {
   const rootRef = useRef(null);
 
@@ -56,9 +57,14 @@ export function SelectionDial({
           aria-label={`${label} level`}
           style={{
             position: 'absolute',
-            bottom: 'calc(100% + 8px)',
+            ...(popupDirection === 'down'
+              ? { top: 'calc(100% + 8px)' }
+              : { bottom: 'calc(100% + 8px)' }),
             right: 0,
             display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            maxWidth: 288,
             gap: 6,
             padding: 8,
             background: '#fff',

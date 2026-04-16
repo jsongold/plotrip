@@ -155,9 +155,35 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M6 14l6-6 6 6" />
           </svg>
+          {cities.length > 0 && (
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: 6, right: 6,
+                minWidth: 20, height: 20, padding: '0 5px',
+                borderRadius: 10,
+                background: 'var(--accent, #2563eb)',
+                color: '#fff',
+                fontSize: 11, fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '2px solid #fff',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+              }}
+            >
+              {cities.length}
+            </span>
+          )}
         </button>
       )}
-      <FilterBar />
+      <div style={{
+        position: 'fixed', left: 0, right: 0,
+        bottom: 'calc(24px + env(safe-area-inset-bottom))',
+        zIndex: 1000, padding: '0 16px',
+        pointerEvents: 'auto',
+      }}>
+        <Toolbar onAdd={handleAdd} status={status} />
+      </div>
       <button
         onClick={() => setShowTooltips((v) => !v)}
         aria-label={showTooltips ? 'Hide labels' : 'Show labels'}
@@ -166,8 +192,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         style={{
           position: 'fixed',
           right: 72,
-          bottom: 'calc(80px + env(safe-area-inset-bottom))',
-          zIndex: 1000,
+          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px))',
+          zIndex: 1200,
+          transition: 'bottom 200ms ease-out',
           width: 44, height: 44,
           borderRadius: 10,
           border: `1px solid ${showTooltips ? '#000' : 'rgba(0,0,0,0.08)'}`,
@@ -184,14 +211,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           <line x1="7" y1="7" x2="7.01" y2="7" />
         </svg>
       </button>
-      <div style={{
-        position: 'fixed', left: 0, right: 0,
-        bottom: 'calc(24px + env(safe-area-inset-bottom))',
-        zIndex: 1000, padding: '0 16px',
-        pointerEvents: 'auto',
-      }}>
-        <Toolbar onAdd={handleAdd} status={status} />
-      </div>
+      <FilterBar />
 
       {compareBranchId && (
         <CompareView

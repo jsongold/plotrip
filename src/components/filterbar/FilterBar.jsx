@@ -1,9 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useFilter } from '../../context/FilterContext';
 import { getAllFilters } from '../../lib/filters/registry';
 import { FilterIcon } from './FilterIcon';
 import { MonthDial } from './MonthDial';
-import { SelectionDial } from './SelectionDial';
 import { FilterTriIcon } from './icons';
 import { bump } from '../../lib/haptics';
 
@@ -18,7 +17,12 @@ export function FilterBar() {
   const { activeFilters, month, toggle, setMonth, getFilterValue, setFilterValue } = useFilter();
   const filters = getAllFilters();
 
-  // 仕様: 外クリックでは閉じない。filter toggle 再タップのみで閉じる
+  // 仕様: 外クリックでは閉じない。filter toggle 再タップ or CityPinPopup open で閉じる
+  useEffect(() => {
+    function onClose() { setOpen(false); }
+    window.addEventListener('plotrip:closefilters', onClose);
+    return () => window.removeEventListener('plotrip:closefilters', onClose);
+  }, []);
 
   // 展開要素: 上から 順=climate→vibes→crowd→cost→events→month (toggle 直上)
   const items = [
@@ -34,12 +38,13 @@ export function FilterBar() {
       style={{
         position: 'fixed',
         right: 16,
-        bottom: 'calc(80px + env(safe-area-inset-bottom))',
-        zIndex: 1001,
+        bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px))',
+        zIndex: 1200,
         pointerEvents: 'auto',
+        transition: 'bottom 200ms ease-out',
       }}
     >
-      {/* 展開スタック: 常時 DOM にあり、opacity+transform で表示切替 */}
+      {/* 展開スタック: 上方向 (toggle の上) に展開 */}
       <div
         aria-hidden={!open}
         style={{
@@ -74,29 +79,6 @@ export function FilterBar() {
           }
 
           const f = item.def;
-          if (f.options) {
-            return (
-              <div key={item.key} style={style}>
-                <SelectionDial
-                  slug={f.slug}
-                  label={f.label}
-                  icon={f.icon}
-                  options={f.options}
-                  active={activeFilters.has(f.slug)}
-                  value={getFilterValue(f.slug) ?? null}
-                  onToggleOpen={(opn) => {
-                    const isOn = activeFilters.has(f.slug);
-                    if (opn && !isOn) toggle(f.slug);
-                    else if (!opn && isOn) {
-                      toggle(f.slug);
-                      setFilterValue(f.slug, null);
-                    }
-                  }}
-                  onChangeValue={(v) => setFilterValue(f.slug, v)}
-                />
-              </div>
-            );
-          }
           return (
             <div key={item.key} style={style}>
               <FilterIcon
