@@ -116,7 +116,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         header={
           <div style={{
             padding: '4px 16px 8px',
-            borderBottom: '1px solid var(--border)', background: 'var(--surface)',
+            borderBottom: '1px solid #eee', background: '#fff',
           }}>
             <BranchBar
               tripName={trip?.name}
