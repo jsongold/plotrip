@@ -172,7 +172,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
                 color: 'var(--accent-text)',
                 fontSize: 11, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid var(--bg-elevated)',
                 boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
               }}
             >
