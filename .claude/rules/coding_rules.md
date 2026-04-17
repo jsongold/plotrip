@@ -6,6 +6,12 @@
 - Start with the lightest, fastest implementation possible.
 - Purpose: surface misunderstandings early before investing in heavy code.
 
+## Library-first research
+- Before planning or implementing any feature, search for modern, popular, and well-maintained libraries that solve the problem.
+- Prefer established libs over hand-rolled solutions (fewer bugs, better a11y, maintained by community).
+- Check npm trends, GitHub stars, and last-updated date. Avoid libs with no recent activity (>1 year stale).
+- Only write custom code when no suitable library exists or the lib would be disproportionately heavy for the use case.
+
 ## Supabase CLI for queries
 - Use `supabase` CLI to run DB queries instead of writing ad-hoc scripts.
 - Prefer `supabase db execute` or equivalent CLI over opening psql or writing Node scripts for one-off queries.
