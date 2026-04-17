@@ -111,11 +111,11 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
           onClick={(e) => { e.stopPropagation(); onAdd(); }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.08)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(220,38,38,0.5)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(220,38,38,0.4)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
           }}
           style={{
             position: 'absolute',
@@ -124,11 +124,11 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
             width: 44,
             height: 44,
             borderRadius: '50%',
-            background: '#dc2626',
-            color: '#fff',
+            background: 'var(--danger)',
+            color: 'var(--danger-text)',
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(220,38,38,0.4)',
+            boxShadow: 'var(--shadow-md)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -147,11 +147,11 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
           onClick={(e) => { e.stopPropagation(); onRecommend(); }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'scale(1.08)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(8,145,178,0.5)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(8,145,178,0.4)';
+            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
           }}
           style={{
             position: 'absolute',
@@ -160,11 +160,11 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
             width: 44,
             height: 44,
             borderRadius: '50%',
-            background: '#0891b2',
-            color: '#fff',
+            background: 'var(--secondary)',
+            color: 'var(--secondary-text)',
             border: 'none',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(8,145,178,0.4)',
+            boxShadow: 'var(--shadow-md)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

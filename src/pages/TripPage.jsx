@@ -27,6 +27,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [focusRequest, setFocusRequest] = useState(null);
   const [showTooltips, setShowTooltips] = useState(true);
   const [recommendFor, setRecommendFor] = useState(null);
+  const [previewCity, setPreviewCity] = useState(null);
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -83,7 +84,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#888' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: 'var(--text-muted)' }}>
         Loading trip...
       </div>
     );
@@ -103,6 +104,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           onCitySelect={handleAdd}
           onRecommend={(origin) => { setPanelOpen(false); setRecommendFor(origin); }}
           focusRequest={focusRequest}
+          previewCity={previewCity}
           showTooltips={showTooltips}
         />
       </div>
@@ -114,7 +116,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         header={
           <div style={{
             padding: '4px 16px 8px',
-            borderBottom: '1px solid #eee', background: '#fff',
+            borderBottom: '1px solid var(--border)', background: 'var(--surface)',
           }}>
             <BranchBar
               tripName={trip?.name}
@@ -152,7 +154,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             width: 64, height: 64,
             border: 'none', background: 'transparent', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-            color: '#444',
+            color: 'var(--text-muted)',
           }}
         >
           <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -167,10 +169,10 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
                 minWidth: 20, height: 20, padding: '0 5px',
                 borderRadius: 10,
                 background: 'var(--accent, #2563eb)',
-                color: '#fff',
+                color: 'var(--accent-text)',
                 fontSize: 11, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid #fff',
+                border: '2px solid var(--bg-elevated)',
                 boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
               }}
             >
@@ -185,7 +187,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         zIndex: 1000, padding: '0 16px',
         pointerEvents: 'auto',
       }}>
-        <Toolbar onAdd={handleAdd} status={status} />
+        <Toolbar onAdd={(city) => {
+          setPreviewCity({ ...city, _tick: Date.now() });
+        }} status={status} />
       </div>
       <button
         onClick={() => setShowTooltips((v) => !v)}
@@ -199,13 +203,13 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           zIndex: 1200,
           transition: 'bottom 200ms ease-out',
           width: 44, height: 44,
-          borderRadius: 10,
-          border: `1px solid ${showTooltips ? '#000' : 'rgba(0,0,0,0.08)'}`,
-          background: showTooltips ? '#000' : '#fff',
-          color: showTooltips ? '#fff' : '#000',
+          borderRadius: 'var(--r-lg)',
+          border: `1px solid ${showTooltips ? 'var(--text)' : 'var(--border)'}`,
+          background: showTooltips ? 'var(--text)' : 'var(--surface)',
+          color: showTooltips ? 'var(--bg)' : 'var(--text)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 0, cursor: 'pointer',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          boxShadow: 'var(--shadow-md)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >

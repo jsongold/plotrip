@@ -78,9 +78,9 @@ export function DestinationSheet({ open, onClose, header, children }) {
     <div style={{
       position: 'fixed', left: 0, right: 0, bottom: 0,
       height: visibleHeight, zIndex: 400,
-      background: '#fff', borderTop: '1px solid #ddd',
+      background: 'var(--surface)', borderTop: '1px solid var(--border)',
       borderTopLeftRadius: 12, borderTopRightRadius: 12,
-      boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+      boxShadow: '0 -4px 24px rgba(0,0,0,0.16)',
       display: 'flex', flexDirection: 'column',
       transition: dragging ? 'none' : 'height 0.25s ease-out',
     }}>
@@ -97,7 +97,7 @@ export function DestinationSheet({ open, onClose, header, children }) {
           padding: '8px 0',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
         }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#ccc' }} />
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border-strong)' }} />
         </div>
         {header}
       </div>
