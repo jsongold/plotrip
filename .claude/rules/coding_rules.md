@@ -37,6 +37,7 @@
 ### Visual balance
 - Floating controls on the same screen layer must share the same visual language: same border-radius, same size class (44px or 48px), same shadow token.
 - Touch targets: minimum 44×44px (48×48 for primary FAB-style actions, per M3).
+- No border colors on UI surfaces, list items, badges, or icon buttons — use `border: none` or `transparent`. Separation is achieved through spacing and shadow, not lines.
 
 ### Dark mode
 - All background and border values must use `var(--*)` — never `#fff`, `#000`, `#eee`, `#ddd` inline.
