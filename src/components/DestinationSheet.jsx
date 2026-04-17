@@ -78,7 +78,7 @@ export function DestinationSheet({ open, onClose, header, children }) {
     <div style={{
       position: 'fixed', left: 0, right: 0, bottom: 0,
       height: visibleHeight, zIndex: 400,
-      background: '#fff', borderTop: '1px solid var(--border)',
+      background: '#fff', borderTop: 'none',
       borderTopLeftRadius: 12, borderTopRightRadius: 12,
       boxShadow: '0 -4px 24px rgba(0,0,0,0.16)',
       display: 'flex', flexDirection: 'column',

@@ -23,7 +23,7 @@ export function CityListItem({
       {...draggableProps}
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: 8, border: '1px solid #eee', borderRadius: 6,
+        padding: 8, border: 'none', borderRadius: 6,
         marginBottom: 6,
         background: isDragging ? '#e8f0fe' : c.inherited ? '#f0f0ff' : '#fafafa',
         ...draggableProps.style,
