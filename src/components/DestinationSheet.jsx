@@ -22,6 +22,7 @@ export function DestinationSheet({ open, onClose, header, children }) {
   }, []);
 
   function handlePointerDown(e) {
+    if (e.target.closest('button, input, [data-no-drag]')) return;
     dragStartRef.current = e.clientY;
     offsetStartRef.current = offsetY;
     setDragging(true);

@@ -12,6 +12,10 @@ import { useTripHandlers } from '../hooks/useTripHandlers';
 import { FilterProvider } from '../context/FilterContext';
 import { FilterBar } from '../components/filterbar/FilterBar';
 import { RecommendationCarousel } from '../components/RecommendationCarousel';
+import { AuthActions } from '../components/auth';
+import { ItineraryGenButton } from '../components/itinerary-gen/ItineraryGenButton';
+import { ItineraryGenSheet } from '../components/itinerary-gen/ItineraryGenSheet';
+import { useItineraryGen } from '../components/itinerary-gen/useItineraryGen';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -28,6 +32,8 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [showTooltips, setShowTooltips] = useState(true);
   const [recommendFor, setRecommendFor] = useState(null);
   const [previewCity, setPreviewCity] = useState(null);
+  const [itGenOpen, setItGenOpen] = useState(false);
+  const { generate, generating, error: genError } = useItineraryGen({ navigate, tripId, branchId, addCity });
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -66,6 +72,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     handleBranchSwitch,
     handleNewTrip,
     handleNewBranch,
+    handleDeleteBranch,
     handleStartDateChange,
   } = useTripHandlers({
     tripId,
@@ -110,6 +117,15 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       </div>
 
       {/* Layer 2: Destination list (bottom sheet) */}
+      <div style={{
+        position: 'fixed',
+        top: 'max(12px, env(safe-area-inset-top))',
+        right: 16,
+        zIndex: 1300,
+      }}>
+        <AuthActions navigate={navigate} compact />
+      </div>
+
       <DestinationSheet
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
@@ -119,6 +135,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             background: '#fff',
           }}>
             <BranchBar
+              tripId={tripId}
               tripName={trip?.name}
               branches={branches}
               currentBranchId={branchId}
@@ -126,8 +143,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
               onTripNameChange={handleTripNameChange}
               onBranchNameChange={handleBranchNameChange}
               onShare={handleShare}
-              onNewTrip={handleNewTrip}
+              onSelectTrip={(tId, bId) => navigate(`/t/${tId}/b/${bId}`)}
               onNewBranch={handleNewBranch}
+              onDeleteBranch={handleDeleteBranch}
               onCompare={() => {
                 const other = branches.find((b) => b.id !== branchId);
                 if (other) setCompareBranchId(other.id);
@@ -190,6 +208,25 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           setPreviewCity({ ...city, _tick: Date.now() });
         }} status={status} />
       </div>
+      <ItineraryGenButton
+        onClick={() => setItGenOpen(true)}
+        style={{
+          position: 'fixed',
+          right: 72,
+          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
+          zIndex: 1200,
+          transition: 'bottom 200ms ease-out',
+        }}
+      />
+      <ItineraryGenSheet
+        open={itGenOpen}
+        onOpenChange={setItGenOpen}
+        generating={generating}
+        error={genError}
+        onGenerate={async (filters, opts) => {
+          await generate(filters, opts);
+        }}
+      />
       <button
         onClick={() => setShowTooltips((v) => !v)}
         aria-label={showTooltips ? 'Hide labels' : 'Show labels'}
@@ -197,10 +234,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         title={showTooltips ? 'Hide labels' : 'Show labels'}
         style={{
           position: 'fixed',
-          right: 72,
+          right: 128,
           bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
           zIndex: 1200,
-          transition: 'bottom 200ms ease-out',
           width: 44, height: 44,
           borderRadius: 'var(--r-lg)',
           border: `1px solid ${showTooltips ? 'var(--text)' : 'var(--border)'}`,

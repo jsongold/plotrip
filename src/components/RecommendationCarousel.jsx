@@ -161,6 +161,7 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity
     scrollSnapType: 'x mandatory',
     WebkitOverflowScrolling: 'touch',
     pointerEvents: 'auto',
+    touchAction: 'pan-x',
   };
 
   const cardWrapperStyle = {

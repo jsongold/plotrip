@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react';
 import { EditableName } from './EditableName';
 import { BranchMenu } from './BranchMenu';
+import { TripMenu } from './TripMenu';
 import { ShareIcon } from './ShareIcon';
 
 export function BranchBar({
+  tripId,
   tripName,
   branches,
   currentBranchId,
@@ -11,13 +13,16 @@ export function BranchBar({
   onTripNameChange,
   onBranchNameChange,
   onShare,
-  onNewTrip,
+  onSelectTrip,
   onNewBranch,
+  onDeleteBranch,
   onCompare,
 }) {
   const currentBranch = branches?.find((b) => b.id === currentBranchId);
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
+  const [tripMenuOpen, setTripMenuOpen] = useState(false);
   const branchAnchorRef = useRef(null);
+  const tripAnchorRef = useRef(null);
 
   return (
     <div style={{
@@ -25,21 +30,33 @@ export function BranchBar({
       padding: 8, borderBottom: '1px solid #eee',
       position: 'relative',
     }}>
-      {/* Trip name: tap=new trip, hold=edit */}
-      <EditableName
-        value={tripName}
-        placeholder="Untitled Trip"
-        onTap={() => onNewTrip?.()}
-        onRename={(name) => onTripNameChange?.(name)}
-        title="Tap: new trip. Hold: rename."
-      />
+      {/* Trip name: tap=trip list, hold=edit */}
+      <div ref={tripAnchorRef} data-no-drag style={{ position: 'relative' }}>
+        <EditableName
+          value={tripName}
+          placeholder="Untitled Trip"
+          onTap={() => setTripMenuOpen(true)}
+          onRename={(name) => onTripNameChange?.(name)}
+          title="Tap: switch trip. Hold: rename."
+        >
+          {(tripName || 'Untitled Trip')} <span style={{ fontSize: 11, color: '#666' }}>▾</span>
+        </EditableName>
+
+        <TripMenu
+          open={tripMenuOpen}
+          currentTripId={tripId}
+          onSelect={(tId, bId) => onSelectTrip?.(tId, bId)}
+          onClose={() => setTripMenuOpen(false)}
+          anchorRef={tripAnchorRef}
+        />
+      </div>
 
       <span style={{ fontWeight: 'bold', fontSize: 15, color: '#999', margin: '0 2px', userSelect: 'none' }}>
         /
       </span>
 
       {/* Branch name: tap=branch menu, hold=edit */}
-      <div ref={branchAnchorRef} style={{ position: 'relative' }}>
+      <div ref={branchAnchorRef} data-no-drag style={{ position: 'relative' }}>
         <EditableName
           value={currentBranch?.name}
           placeholder="main"
@@ -56,6 +73,7 @@ export function BranchBar({
           currentBranchId={currentBranchId}
           onSelect={(id) => onSwitch?.(id)}
           onNewBranch={() => onNewBranch?.()}
+          onDeleteBranch={(id) => onDeleteBranch?.(id)}
           onClose={() => setBranchMenuOpen(false)}
           anchorRef={branchAnchorRef}
         />
