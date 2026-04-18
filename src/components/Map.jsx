@@ -3,9 +3,10 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useCatalogLoader } from '../hooks/useCatalogLoader';
 import { useItineraryRender } from '../hooks/useItineraryRender';
+import { mountCityPinPopup } from './CityPinPopup';
 import { useFilter } from '../context/FilterContext';
 import { getFilter, getLayerFilters, getOrbitFilters } from '../lib/filters/registry';
-import { mountOrbitLayer } from '../lib/filters/badgeLayer';
+import { mountOrbitLayer } from '../lib/filters/orbitLayer';
 
 // Aliased to avoid name collision with the Map component defined below
 const NativeMap = globalThis.Map;
@@ -17,7 +18,7 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
-export function Map({ cities, onCitySelect, onRecommend, focusRequest, showTooltips = true }) {
+export function Map({ cities, onCitySelect, onRecommend, focusRequest, previewCity, showTooltips = true }) {
   const { activeFilters, month, filterValues } = useFilter();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -234,6 +235,47 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, showToolt
       }).addTo(hl);
     }
   }, [focusRequest]);
+
+  // Open a CityPinPopup at a given city's location (triggered by search bar).
+  // Pan first, then open popup after the animation finishes so the popup
+  // anchors correctly above the pin.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !previewCity) return;
+    const { lat, lng, name, country } = previewCity;
+    if (lat == null || lng == null) return;
+
+    const onAdd = () => {
+      onCitySelectRef.current?.({ name, lat, lng, country });
+      map.closePopup();
+    };
+    const onRecommend = () => {
+      onRecommendRef.current?.({ id: null, name, country, lat, lng });
+      try { map.closePopup(); } catch {}
+    };
+    const content = mountCityPinPopup({ id: null, name, country, lat, lng }, { onAdd, onRecommend });
+    const popup = L.popup({
+      closeButton: true,
+      offset: [0, -6],
+      autoPan: true,
+      autoPanPadding: [40, 40],
+      minWidth: 240,
+      maxWidth: 240,
+    })
+      .setLatLng([lat, lng])
+      .setContent(content);
+    popup.on('remove', () => { content._unmount?.(); });
+
+    map.invalidateSize();
+    const targetZoom = Math.max(map.getZoom(), 7);
+    const openPopup = () => popup.openOn(map);
+    map.once('moveend', openPopup);
+    map.setView([lat, lng], targetZoom, { animate: true });
+
+    return () => {
+      map.off('moveend', openPopup);
+    };
+  }, [previewCity]);
 
   useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRecommendRef);
   useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onRecommendRef);

@@ -102,14 +102,14 @@ export function FilterBar() {
         onClick={() => { bump(); setOpen((v) => !v); }}
         style={{
           width: 44, height: 44,
-          borderRadius: 10,
-          border: `1px solid ${open ? '#000' : 'rgba(0,0,0,0.08)'}`,
-          background: open ? '#000' : '#fff',
-          color: open ? '#fff' : '#000',
+          borderRadius: 'var(--r-lg)',
+          border: 'none',
+          background: 'var(--surface)',
+          color: open ? 'var(--active-text)' : 'var(--text)',
           cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 0,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          boxShadow: 'var(--shadow-md)',
           transition: 'all 180ms cubic-bezier(0.2,0.9,0.3,1.1)',
           position: 'relative',
           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -125,11 +125,11 @@ export function FilterBar() {
               minWidth: 20, height: 20, padding: '0 5px',
               borderRadius: 10,
               background: 'var(--accent)',
-              color: '#fff',
+              color: 'var(--accent-text)',
               fontSize: 11,
               fontWeight: 700,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: '2px solid #fff',
+              border: 'none',
               boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
             }}
           >

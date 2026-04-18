@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { track } from '../lib/analytics';
 
 export function useBranch(branchId, branches) {
   const [cities, setCities] = useState([]);
@@ -97,11 +98,14 @@ export function useBranch(branchId, branches) {
       days: data.days ?? 1,
       inherited: false,
     }]);
+    track('destination_added', { city_name: city.name, country });
   }
 
   async function removeCity(index) {
     const city = cities[index];
     if (city.inherited) return;
+
+    track('destination_removed', { city_name: city.name, position: index });
 
     // Optimistic removal
     setCities(prev => prev.filter((_, i) => i !== index));

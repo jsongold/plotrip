@@ -20,6 +20,9 @@
   "homepage": "https://github.com/jsongold/plotrip#readme",
   "description": "",
   "devDependencies": {
+    "@turf/circle": "7.3.4",
+    "@turf/intersect": "7.3.4",
+    "@turf/simplify": "7.3.4",
     "@vitejs/plugin-react": "^6.0.1",
     "vite": "^8.0.8"
   },

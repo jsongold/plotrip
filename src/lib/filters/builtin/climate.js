@@ -19,6 +19,22 @@ import { registerFilter } from '../registry';
 import { supabase } from '../../supabase';
 import { mountCatalogLayer, makeBboxPolygon } from '../badgeLayer';
 
+function makeTempLabel(city, tempC, color) {
+  return L.marker([city.lat, city.lng], {
+    interactive: false,
+    icon: L.divIcon({
+      className: '',
+      html: `<div style="
+        font-size:13px;font-weight:700;color:${color};
+        text-shadow:0 0 3px #fff,0 0 3px #fff;
+        white-space:nowrap;text-align:center;
+      ">${Math.round(tempC)}°</div>`,
+      iconSize: [36, 18],
+      iconAnchor: [18, 9],
+    }),
+  });
+}
+
 function makeClimateShape(city, style) {
   if (city.climate_poly) {
     return L.geoJSON(city.climate_poly, {
@@ -58,12 +74,14 @@ registerFilter({
           });
         }
         const color = climateColor(tempC);
-        return makeClimateShape(city, {
+        const shape = makeClimateShape(city, {
           color,
           weight: 1.2,
           fillColor: color,
           fillOpacity: 0.4,
         });
+        const label = makeTempLabel(city, tempC, color);
+        return [shape, label];
       },
     });
   },
