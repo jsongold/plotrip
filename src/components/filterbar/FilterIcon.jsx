@@ -11,15 +11,15 @@ export function FilterIcon({ slug, label, active, onToggle }) {
       onClick={() => { bump(); onToggle(slug); }}
       style={{
         width: 44, height: 44,
-        borderRadius: 10,
-        border: `1px solid ${active ? '#000' : 'rgba(0,0,0,0.08)'}`,
-        background: active ? '#000' : '#fff',
-        color: active ? '#fff' : '#000',
+        borderRadius: 'var(--r-lg)',
+        border: 'none',
+        background: 'var(--surface)',
+        color: active ? 'var(--active-text)' : 'var(--text)',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         cursor: 'pointer', flex: '0 0 auto',
         padding: 0,
         pointerEvents: 'auto',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+        boxShadow: 'var(--shadow-md)',
         transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
       }}
     >

@@ -14,7 +14,7 @@ export function minPopForZoom(zoom) {
   return 500000;
 }
 
-export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRecommendRef) {
+export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onSuggestRef) {
   const loadTimerRef = useRef(null);
   const abortRef = useRef(null);
 
@@ -69,11 +69,10 @@ export function useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRec
           onCitySelectRef.current({ name, lat, lng, country });
           map.closePopup();
         };
-        const onRecommend = () => {
-          onRecommendRef?.current?.({ id, name, country, lat, lng });
-          try { map.closePopup(); } catch {}
+        const onSuggest = (option) => {
+          onSuggestRef?.current?.({ id, name, country, lat, lng, option });
         };
-        const content = mountCityPinPopup({ id, name, country, lat, lng }, { onAdd, onRecommend });
+        const content = mountCityPinPopup({ id, name, country, lat, lng }, { onAdd, onSuggest });
         const popup = L.popup({
           closeButton: true,
           offset: [0, -6],

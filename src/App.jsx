@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from './hooks/useRouter';
-import { HomePage } from './pages/HomePage';
-import { DiscoverPage } from './pages/DiscoverPage';
 import { TripPage } from './pages/TripPage';
 import { supabase } from './lib/supabase';
+import { useAuth } from './context/AuthContext';
+import { AuthPanel } from './components/auth';
 
 function ShortRedirect({ code }) {
   const [error, setError] = useState(null);
@@ -40,6 +40,37 @@ function ShortRedirect({ code }) {
 
 export default function App() {
   const { page, tripId, branchId, code, navigate, replace } = useRouter();
+  const { isInitializing, isAuthenticated } = useAuth();
+
+  if (page === 'auth' || (page !== 'trip' && page !== 'short')) {
+    if (isInitializing) {
+      return (
+        <div style={{
+          minHeight: '100dvh',
+          display: 'grid',
+          placeItems: 'center',
+          background: 'radial-gradient(circle at top, rgba(8,145,178,0.12), transparent 30%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+          color: 'var(--text-muted)',
+        }}>
+          Checking session...
+        </div>
+      );
+    }
+
+    if (!isAuthenticated) {
+      return (
+        <div style={{
+          minHeight: '100dvh',
+          display: 'grid',
+          placeItems: 'center',
+          padding: 24,
+          background: 'radial-gradient(circle at top, rgba(8,145,178,0.12), transparent 30%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+        }}>
+          <AuthPanel />
+        </div>
+      );
+    }
+  }
 
   const lockedHeight = page === 'trip' || page === 'short';
   return (
@@ -49,8 +80,6 @@ export default function App() {
       flexDirection: 'column',
       background: 'var(--bg)',
     }}>
-      {page === 'home' && <DiscoverPage navigate={navigate} />}
-      {page === 'new' && <HomePage navigate={navigate} />}
       {page === 'trip' && (
         <TripPage
           tripId={tripId}

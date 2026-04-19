@@ -1,7 +1,14 @@
 import { supabase } from '../lib/supabase';
 import { hashPassword, verifyPassword } from '../lib/crypto';
+import { track } from '../lib/analytics';
+
+export async function requireCurrentUser() {
+  const { data } = await supabase.auth.getUser();
+  return data?.user ?? { id: 'guest', email: 'guest@plotrip.local' };
+}
 
 export async function createTrip(name, password) {
+  const user = await requireCurrentUser();
   let passwordHash = null;
   if (password) {
     passwordHash = await hashPassword(password);
@@ -9,7 +16,7 @@ export async function createTrip(name, password) {
 
   const { data: trip, error: tripErr } = await supabase
     .from('trips')
-    .insert({ name, password_hash: passwordHash })
+    .insert({ name, password_hash: passwordHash, user_id: user.id })
     .select()
     .single();
   if (tripErr) throw tripErr;
@@ -20,6 +27,8 @@ export async function createTrip(name, password) {
     .select()
     .single();
   if (branchErr) throw branchErr;
+
+  track('trip_created', { has_password: !!password });
 
   return { tripId: trip.id, branchId: branch.id };
 }

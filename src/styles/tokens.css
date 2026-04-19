@@ -12,10 +12,17 @@
   --accent:       #2563eb;
   --accent-weak:  #dbeafe;
   --accent-text:  #ffffff;
+  --secondary:      #0891b2;
+  --secondary-weak: #cffafe;
+  --secondary-text: #ffffff;
   --danger:       #dc2626;
   --danger-weak:  #fee2e2;
+  --danger-text:  #ffffff;
   --warning:      #d97706;
   --success:      #16a34a;
+  --surface-container: #f0f0f0;
+  --active:       #fde8d8;
+  --active-text:  #ffffff;
 
   --match-low:    #ef4444;
   --match-mid:    #f59e0b;
@@ -31,6 +38,7 @@
   --s-8: 64px;
 
   --r-sm: 4px;
+  --r-6:  6px;
   --r-md: 8px;
   --r-lg: 12px;
   --r-xl: 16px;
@@ -62,55 +70,6 @@
   color-scheme: light;
 }
 
-:root[data-theme='dark'] {
-  --bg:          #0a0a0a;
-  --bg-elevated: #171717;
-  --surface:     #1c1c1c;
-  --surface-2:   #262626;
-  --border:      #2a2a2a;
-  --border-strong: #3a3a3a;
-  --text:        #f5f5f5;
-  --text-muted:  #a3a3a3;
-  --text-subtle: #737373;
-
-  --accent:       #3b82f6;
-  --accent-weak:  #1e3a8a;
-  --accent-text:  #ffffff;
-  --danger:       #f87171;
-  --danger-weak:  #7f1d1d;
-  --warning:      #fbbf24;
-  --success:      #4ade80;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
-
-  color-scheme: dark;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --bg:          #0a0a0a;
-    --bg-elevated: #171717;
-    --surface:     #1c1c1c;
-    --surface-2:   #262626;
-    --border:      #2a2a2a;
-    --border-strong: #3a3a3a;
-    --text:        #f5f5f5;
-    --text-muted:  #a3a3a3;
-    --text-subtle: #737373;
-    --accent:      #3b82f6;
-    --accent-weak: #1e3a8a;
-    --danger:      #f87171;
-    --danger-weak: #7f1d1d;
-    --warning:     #fbbf24;
-    --success:     #4ade80;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.6);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
-    color-scheme: dark;
-  }
-}
 
 html, body {
   background: var(--bg);
@@ -142,6 +101,7 @@ html, body {
   padding: 0;
   border-radius: 12px;
   overflow: hidden;
+  background: var(--surface);
 }
 .leaflet-popup-content {
   margin: 0 !important;
@@ -152,6 +112,11 @@ html, body {
 /* Toggle destination tooltip visibility */
 .hide-tooltips .leaflet-tooltip {
   display: none !important;
+}
+
+.orbit-root {
+  background: none !important;
+  border: none !important;
 }
 
 /* Radial orbit badge satellites around pins */
@@ -169,12 +134,12 @@ html, body {
   margin-left: -22px;
   margin-top: -22px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24px;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  box-shadow: var(--shadow-md);
   animation: orbit-pop 280ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
 }

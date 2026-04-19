@@ -23,7 +23,7 @@ export function CityListItem({
       {...draggableProps}
       style={{
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: 8, border: '1px solid #eee', borderRadius: 6,
+        padding: 8, border: 'none', borderRadius: 6,
         marginBottom: 6,
         background: isDragging ? '#e8f0fe' : c.inherited ? '#f0f0ff' : '#fafafa',
         ...draggableProps.style,
@@ -143,8 +143,8 @@ export function CityListItem({
           <span style={{
             minWidth: 28, height: 26, textAlign: 'center',
             fontSize: 15, fontWeight: 600, lineHeight: '26px',
-            border: '1px solid #ddd', borderRadius: 4,
-            padding: '0 6px', background: '#fafafa', color: '#333',
+            border: 'none', borderRadius: 4,
+            padding: '0 6px', background: 'transparent', color: '#333',
             pointerEvents: 'none',
           }}>
             {c.days ?? 1}
@@ -186,7 +186,7 @@ export function CityListItem({
 
 const iconBtnStyle = {
   width: 28, height: 28, borderRadius: '50%',
-  border: '1px solid #eee', background: '#fff',
+  border: 'none', background: 'transparent',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   cursor: 'pointer', padding: 0
 };

@@ -3,7 +3,7 @@ import L from 'leaflet';
 import 'leaflet-arrowheads';
 import { mountCityPinPopup } from '../components/CityPinPopup';
 
-export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onRecommendRef) {
+export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onSuggestRef) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -41,9 +41,8 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
         .addTo(markerLayerRef.current);
 
       const openPopup = () => {
-        const onRecommend = () => {
-          onRecommendRef?.current?.({ id: null, name: c.name, country: c.country, lat: c.lat, lng: c.lng });
-          try { map.closePopup(); } catch {}
+        const onSuggest = (option) => {
+          onSuggestRef?.current?.({ id: null, name: c.name, country: c.country, lat: c.lat, lng: c.lng, option });
         };
         const onAdd = () => {
           onCitySelectRef?.current?.({ name: c.name, lat: c.lat, lng: c.lng, country: c.country });
@@ -51,7 +50,7 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
         };
         const content = mountCityPinPopup(
           { id: null, name: c.name, country: c.country, lat: c.lat, lng: c.lng },
-          { onAdd, onRecommend }
+          { onAdd, onSuggest }
         );
         const popup = L.popup({
           closeButton: true,

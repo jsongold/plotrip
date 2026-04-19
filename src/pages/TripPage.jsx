@@ -11,7 +11,11 @@ import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/
 import { useTripHandlers } from '../hooks/useTripHandlers';
 import { FilterProvider } from '../context/FilterContext';
 import { FilterBar } from '../components/filterbar/FilterBar';
-import { RecommendationCarousel } from '../components/RecommendationCarousel';
+import { CitySuggestionCarousel } from '../components/CitySuggestionCarousel';
+import { AuthActions } from '../components/auth';
+import { ItineraryGenButton } from '../components/itinerary-gen/ItineraryGenButton';
+import { ItineraryGenSheet } from '../components/itinerary-gen/ItineraryGenSheet';
+import { useItineraryGen } from '../components/itinerary-gen/useItineraryGen';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -26,13 +30,29 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [compareBranchId, setCompareBranchId] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [showTooltips, setShowTooltips] = useState(true);
-  const [recommendFor, setRecommendFor] = useState(null);
+  const [suggestFor, setSuggestFor] = useState(null);
+  const [suggestOption, setSuggestOption] = useState(null);
+  const [previewCity, setPreviewCity] = useState(null);
+  const [itGenOpen, setItGenOpen] = useState(false);
+  const { generate, generating, error: genError } = useItineraryGen({ navigate, tripId, branchId, addCity });
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
     if (city?.lat == null || city?.lng == null) return;
     setFocusRequest({ lat: city.lat, lng: city.lng, _tick: Date.now() });
     setPanelOpen(false);
+  };
+
+  const handleSuggestOrigin = (origin) => {
+    const { option, ...city } = origin;
+    setPanelOpen(false);
+    setSuggestFor(city);
+    setSuggestOption(option || null);
+  };
+
+  const handleSuggestClose = () => {
+    setSuggestFor(null);
+    setSuggestOption(null);
   };
 
   useEffect(() => {
@@ -65,6 +85,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     handleBranchSwitch,
     handleNewTrip,
     handleNewBranch,
+    handleDeleteBranch,
     handleStartDateChange,
   } = useTripHandlers({
     tripId,
@@ -83,7 +104,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: '#888' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100dvh', color: 'var(--text-muted)' }}>
         Loading trip...
       </div>
     );
@@ -101,22 +122,33 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         <Map
           cities={cities}
           onCitySelect={handleAdd}
-          onRecommend={(origin) => { setPanelOpen(false); setRecommendFor(origin); }}
+          onSuggest={handleSuggestOrigin}
           focusRequest={focusRequest}
+          previewCity={previewCity}
           showTooltips={showTooltips}
         />
       </div>
 
       {/* Layer 2: Destination list (bottom sheet) */}
+      <div style={{
+        position: 'fixed',
+        top: 'max(12px, env(safe-area-inset-top))',
+        right: 16,
+        zIndex: 1300,
+      }}>
+        <AuthActions navigate={navigate} compact />
+      </div>
+
       <DestinationSheet
         open={panelOpen}
         onClose={() => setPanelOpen(false)}
         header={
           <div style={{
             padding: '4px 16px 8px',
-            borderBottom: '1px solid #eee', background: '#fff',
+            background: '#fff',
           }}>
             <BranchBar
+              tripId={tripId}
               tripName={trip?.name}
               branches={branches}
               currentBranchId={branchId}
@@ -124,8 +156,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
               onTripNameChange={handleTripNameChange}
               onBranchNameChange={handleBranchNameChange}
               onShare={handleShare}
-              onNewTrip={handleNewTrip}
+              onSelectTrip={(tId, bId) => navigate(`/t/${tId}/b/${bId}`)}
               onNewBranch={handleNewBranch}
+              onDeleteBranch={handleDeleteBranch}
               onCompare={() => {
                 const other = branches.find((b) => b.id !== branchId);
                 if (other) setCompareBranchId(other.id);
@@ -152,7 +185,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
             width: 64, height: 64,
             border: 'none', background: 'transparent', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-            color: '#444',
+            color: 'var(--text-muted)',
           }}
         >
           <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -167,10 +200,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
                 minWidth: 20, height: 20, padding: '0 5px',
                 borderRadius: 10,
                 background: 'var(--accent, #2563eb)',
-                color: '#fff',
+                color: 'var(--accent-text)',
                 fontSize: 11, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid #fff',
                 boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
               }}
             >
@@ -185,8 +217,29 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         zIndex: 1000, padding: '0 16px',
         pointerEvents: 'auto',
       }}>
-        <Toolbar onAdd={handleAdd} status={status} />
+        <Toolbar onAdd={(city) => {
+          setPreviewCity({ ...city, _tick: Date.now() });
+        }} status={status} />
       </div>
+      <ItineraryGenButton
+        onClick={() => setItGenOpen(true)}
+        style={{
+          position: 'fixed',
+          right: 72,
+          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
+          zIndex: 1200,
+          transition: 'bottom 200ms ease-out',
+        }}
+      />
+      <ItineraryGenSheet
+        open={itGenOpen}
+        onOpenChange={setItGenOpen}
+        generating={generating}
+        error={genError}
+        onGenerate={async (filters, opts) => {
+          await generate(filters, opts);
+        }}
+      />
       <button
         onClick={() => setShowTooltips((v) => !v)}
         aria-label={showTooltips ? 'Hide labels' : 'Show labels'}
@@ -194,18 +247,17 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         title={showTooltips ? 'Hide labels' : 'Show labels'}
         style={{
           position: 'fixed',
-          right: 72,
+          right: 128,
           bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
           zIndex: 1200,
-          transition: 'bottom 200ms ease-out',
           width: 44, height: 44,
-          borderRadius: 10,
-          border: `1px solid ${showTooltips ? '#000' : 'rgba(0,0,0,0.08)'}`,
-          background: showTooltips ? '#000' : '#fff',
-          color: showTooltips ? '#fff' : '#000',
+          borderRadius: 'var(--r-lg)',
+          border: `1px solid ${showTooltips ? 'var(--text)' : 'var(--border)'}`,
+          background: showTooltips ? 'var(--text)' : 'var(--surface)',
+          color: showTooltips ? 'var(--bg)' : 'var(--text)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 0, cursor: 'pointer',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          boxShadow: 'var(--shadow-md)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
@@ -225,12 +277,17 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         />
       )}
 
-      {recommendFor && (
-        <RecommendationCarousel
-          origin={recommendFor}
-          onClose={() => setRecommendFor(null)}
+      {suggestFor && suggestOption && (
+        <CitySuggestionCarousel
+          origin={suggestFor}
+          suggestionOption={suggestOption}
+          onClose={handleSuggestClose}
           onFocusCity={(c) => setFocusRequest({ lat: c.lat, lng: c.lng, _tick: Date.now() })}
           onAddCity={(c) => handleAdd({ name: c.name, lat: c.lat, lng: c.lng, country: c.country })}
+          onSuggest={(c, option) => {
+            setSuggestFor({ id: c.id, name: c.name, country: c.country, lat: c.lat, lng: c.lng });
+            if (option) setSuggestOption(option);
+          }}
         />
       )}
       </div>

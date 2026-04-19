@@ -27,14 +27,14 @@ export function MonthDial({ month, onChange, popupDirection = 'up' }) {
         onClick={() => { bump(); setOpen((v) => !v); }}
         style={{
           width: 44, height: 44,
-          borderRadius: 10,
-          border: `1px solid ${open ? '#000' : 'rgba(0,0,0,0.08)'}`,
-          background: open ? '#000' : '#fff',
-          color: open ? '#fff' : '#000',
+          borderRadius: 'var(--r-lg)',
+          border: 'none',
+          background: 'var(--surface)',
+          color: open ? 'var(--active-text)' : 'var(--text)',
           cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           padding: 0,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+          boxShadow: 'var(--shadow-md)',
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
@@ -49,8 +49,8 @@ export function MonthDial({ month, onChange, popupDirection = 'up' }) {
           right: 0,
           display: 'grid', gridTemplateColumns: 'repeat(4, 64px)',
           gap: 4, padding: 8,
-          background: '#fff',
-          border: '1px solid rgba(0,0,0,0.08)',
+          background: 'var(--surface)',
+          border: 'none',
           borderRadius: 12,
           boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
           zIndex: 2000,
@@ -65,9 +65,9 @@ export function MonthDial({ month, onChange, popupDirection = 'up' }) {
                 onClick={() => { bump(); onChange(m); setOpen(false); }}
                 style={{
                   height: 36, borderRadius: 8,
-                  border: `1px solid ${sel ? 'var(--accent)' : 'rgba(0,0,0,0.1)'}`,
+                  border: 'none',
                   background: sel ? 'var(--accent)' : 'transparent',
-                  color: '#000',
+                  color: sel ? 'var(--accent-text)' : 'var(--text)',
                   fontSize: 13, fontWeight: sel ? 700 : 500,
                   cursor: 'pointer',
                   padding: 0,

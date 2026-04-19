@@ -138,6 +138,16 @@ export function useTripHandlers({
     navigate(`/t/${tripId}/b/${data.id}`);
   }
 
+  async function handleDeleteBranch(deleteBranchId) {
+    await supabase.from('destinations').delete().eq('branch_id', deleteBranchId);
+    await supabase.from('branches').delete().eq('id', deleteBranchId);
+    const remaining = branches.filter(b => b.id !== deleteBranchId);
+    setBranches(remaining);
+    if (deleteBranchId === branchId && remaining.length > 0) {
+      navigate(`/t/${tripId}/b/${remaining[0].id}`);
+    }
+  }
+
   return {
     handleAdd,
     handleFork,
@@ -148,6 +158,7 @@ export function useTripHandlers({
     handleBranchSwitch,
     handleNewTrip,
     handleNewBranch,
+    handleDeleteBranch,
     handleStartDateChange,
   };
 }
