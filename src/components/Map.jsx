@@ -18,7 +18,7 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow });
 
-export function Map({ cities, onCitySelect, onRecommend, focusRequest, previewCity, showTooltips = true }) {
+export function Map({ cities, onCitySelect, onSuggest, focusRequest, previewCity, showTooltips = true }) {
   const { activeFilters, month, filterValues } = useFilter();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -26,7 +26,7 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, previewCi
   const lineLayerRef = useRef(null);
   const catalogLayerRef = useRef(null);
   const onCitySelectRef = useRef(onCitySelect);
-  const onRecommendRef = useRef(onRecommend);
+  const onSuggestRef = useRef(onSuggest);
   const totalDaysRef = useRef(null);
   const citiesRef = useRef(cities);
   const didInitialViewRef = useRef(false);
@@ -35,7 +35,7 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, previewCi
   const highlightLayerRef = useRef(null);
 
   useEffect(() => { onCitySelectRef.current = onCitySelect; }, [onCitySelect]);
-  useEffect(() => { onRecommendRef.current = onRecommend; }, [onRecommend]);
+  useEffect(() => { onSuggestRef.current = onSuggest; }, [onSuggest]);
   useEffect(() => { citiesRef.current = cities; }, [cities]);
 
   // Init map once
@@ -249,11 +249,10 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, previewCi
       onCitySelectRef.current?.({ name, lat, lng, country });
       map.closePopup();
     };
-    const onRecommend = () => {
-      onRecommendRef.current?.({ id: null, name, country, lat, lng });
-      try { map.closePopup(); } catch {}
+    const onSuggest = (option) => {
+      onSuggestRef.current?.({ id: null, name, country, lat, lng, option });
     };
-    const content = mountCityPinPopup({ id: null, name, country, lat, lng }, { onAdd, onRecommend });
+    const content = mountCityPinPopup({ id: null, name, country, lat, lng }, { onAdd, onSuggest });
     const popup = L.popup({
       closeButton: true,
       offset: [0, -6],
@@ -277,8 +276,8 @@ export function Map({ cities, onCitySelect, onRecommend, focusRequest, previewCi
     };
   }, [previewCity]);
 
-  useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onRecommendRef);
-  useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onRecommendRef);
+  useCatalogLoader(mapRef, catalogLayerRef, onCitySelectRef, onSuggestRef);
+  useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onSuggestRef);
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />;
 }

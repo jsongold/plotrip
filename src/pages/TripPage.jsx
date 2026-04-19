@@ -11,7 +11,7 @@ import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/
 import { useTripHandlers } from '../hooks/useTripHandlers';
 import { FilterProvider } from '../context/FilterContext';
 import { FilterBar } from '../components/filterbar/FilterBar';
-import { RecommendationCarousel } from '../components/RecommendationCarousel';
+import { CitySuggestionCarousel } from '../components/CitySuggestionCarousel';
 import { AuthActions } from '../components/auth';
 import { ItineraryGenButton } from '../components/itinerary-gen/ItineraryGenButton';
 import { ItineraryGenSheet } from '../components/itinerary-gen/ItineraryGenSheet';
@@ -30,7 +30,8 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [compareBranchId, setCompareBranchId] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [showTooltips, setShowTooltips] = useState(true);
-  const [recommendFor, setRecommendFor] = useState(null);
+  const [suggestFor, setSuggestFor] = useState(null);
+  const [suggestOption, setSuggestOption] = useState(null);
   const [previewCity, setPreviewCity] = useState(null);
   const [itGenOpen, setItGenOpen] = useState(false);
   const { generate, generating, error: genError } = useItineraryGen({ navigate, tripId, branchId, addCity });
@@ -40,6 +41,18 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     if (city?.lat == null || city?.lng == null) return;
     setFocusRequest({ lat: city.lat, lng: city.lng, _tick: Date.now() });
     setPanelOpen(false);
+  };
+
+  const handleSuggestOrigin = (origin) => {
+    const { option, ...city } = origin;
+    setPanelOpen(false);
+    setSuggestFor(city);
+    setSuggestOption(option || null);
+  };
+
+  const handleSuggestClose = () => {
+    setSuggestFor(null);
+    setSuggestOption(null);
   };
 
   useEffect(() => {
@@ -109,7 +122,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         <Map
           cities={cities}
           onCitySelect={handleAdd}
-          onRecommend={(origin) => { setPanelOpen(false); setRecommendFor(origin); }}
+          onSuggest={handleSuggestOrigin}
           focusRequest={focusRequest}
           previewCity={previewCity}
           showTooltips={showTooltips}
@@ -264,12 +277,17 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         />
       )}
 
-      {recommendFor && (
-        <RecommendationCarousel
-          origin={recommendFor}
-          onClose={() => setRecommendFor(null)}
+      {suggestFor && suggestOption && (
+        <CitySuggestionCarousel
+          origin={suggestFor}
+          suggestionOption={suggestOption}
+          onClose={handleSuggestClose}
           onFocusCity={(c) => setFocusRequest({ lat: c.lat, lng: c.lng, _tick: Date.now() })}
           onAddCity={(c) => handleAdd({ name: c.name, lat: c.lat, lng: c.lng, country: c.country })}
+          onSuggest={(c, option) => {
+            setSuggestFor({ id: c.id, name: c.name, country: c.country, lat: c.lat, lng: c.lng });
+            if (option) setSuggestOption(option);
+          }}
         />
       )}
       </div>

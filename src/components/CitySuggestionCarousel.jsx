@@ -4,20 +4,38 @@ import { useFilter } from '../context/FilterContext';
 import { supabase } from '../lib/supabase';
 import { haversineKm } from '../lib/distance';
 
-export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity }) {
+export const SUGGESTION_TYPES = {
+  distance: { label: 'Distance' },
+  transit: { label: 'Transit' },
+  popular: { label: 'Popular' },
+  purpose: { label: 'Purpose' },
+};
+
+function rankCandidates(filtered, origin, _suggestionOption) {
+  const byDistance = filtered
+    .map((c) => ({ c, d: haversineKm(origin.lat, origin.lng, c.lat, c.lng) }))
+    .sort((a, b) => a.d - b.d)
+    .slice(0, 20)
+    .map(({ c }) => c);
+  return byDistance;
+}
+
+export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity, onSuggest, suggestionOption }) {
   const { activeFilters, filterValues } = useFilter();
   const [candidates, setCandidates] = useState(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const scrollerRef = useRef(null);
 
-  // Serialize filter state so useEffect deps are stable primitives.
   const filterKey = useMemo(() => {
     const area = activeFilters.has('area') ? (filterValues.get('area') || '') : '';
     const experience = activeFilters.has('experience') ? (filterValues.get('experience') || '') : '';
     return `area:${area}|experience:${experience}`;
   }, [activeFilters, filterValues]);
 
-  // Fetch + rank candidates.
+  const optionKey = suggestionOption
+    ? `${suggestionOption.type}:${suggestionOption.purpose || ''}`
+    : '';
+
   useEffect(() => {
     if (!origin) return;
     let cancelled = false;
@@ -40,6 +58,10 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity
         if (v) q = q.contains('experiences', [v]);
       }
 
+      if (suggestionOption?.type === 'purpose' && suggestionOption.purpose) {
+        q = q.contains('experiences', [suggestionOption.purpose]);
+      }
+
       const { data, error } = await q;
       if (cancelled) return;
       if (error || !Array.isArray(data)) {
@@ -52,34 +74,24 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity
         return !(c.name === origin.name && c.country === origin.country);
       });
 
-      const ranked = filtered
-        .map((c) => ({ c, d: haversineKm(origin.lat, origin.lng, c.lat, c.lng) }))
-        .sort((a, b) => a.d - b.d)
-        .slice(0, 20)
-        .map(({ c }) => c);
-
-      setCandidates(ranked);
+      setCandidates(rankCandidates(filtered, origin, suggestionOption));
     })();
 
     return () => { cancelled = true; };
-  }, [origin, filterKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [origin, filterKey, optionKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Escape-to-close.
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // Reset scroll position when candidates change.
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (scroller) scroller.scrollLeft = 0;
     setActiveIdx(0);
   }, [candidates]);
 
-  // Track which card is centered in the viewport (for placing the close
-  // button on the active card only — no map pan side effect).
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller || !candidates || candidates.length === 0) return;
@@ -103,8 +115,6 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity
     return () => obs.disconnect();
   }, [candidates]);
 
-  // Publish the carousel's top-edge distance-from-viewport-bottom as a CSS
-  // variable so floating icons (filter bar, tooltip toggle) can ride above.
   const outerRef = useRef(null);
   useEffect(() => {
     const el = outerRef.current;
@@ -177,7 +187,7 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity
   const renderCloseBtn = () => (
     <button
       type="button"
-      aria-label="Close recommendations"
+      aria-label="Close suggestions"
       title="Close"
       onClick={(e) => { e.stopPropagation(); onClose?.(); }}
       style={closeBtnStyle}
@@ -242,6 +252,7 @@ export function RecommendationCarousel({ origin, onClose, onFocusCity, onAddCity
             <CityPinPopup
               city={c}
               onAdd={onAddCity ? () => { onAddCity(c); onClose?.(); } : undefined}
+              onSuggest={onSuggest ? (option) => onSuggest(c, option) : undefined}
             />
             {i === activeIdx && renderCloseBtn()}
           </div>
