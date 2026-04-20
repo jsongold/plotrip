@@ -13,9 +13,9 @@ import { FilterProvider } from '../context/FilterContext';
 import { FilterBar } from '../components/filterbar/FilterBar';
 import { CitySuggestionCarousel } from '../components/CitySuggestionCarousel';
 import { AuthActions } from '../components/auth';
-import { ItineraryGenButton } from '../components/itinerary-gen/ItineraryGenButton';
-import { ItineraryGenSheet } from '../components/itinerary-gen/ItineraryGenSheet';
-import { useItineraryGen } from '../components/itinerary-gen/useItineraryGen';
+import { ItinerarySuggestionButton } from '../components/itinerary-suggestion/ItinerarySuggestionButton';
+import { ItinerarySuggestionSheet } from '../components/itinerary-suggestion/ItinerarySuggestionSheet';
+import { useItinerarySuggestion } from '../components/itinerary-suggestion/useItinerarySuggestion';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -34,7 +34,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [suggestOption, setSuggestOption] = useState(null);
   const [previewCity, setPreviewCity] = useState(null);
   const [itGenOpen, setItGenOpen] = useState(false);
-  const { generate, generating, error: genError } = useItineraryGen({ navigate, tripId, branchId, addCity });
+  const { generate, generating, error: genError } = useItinerarySuggestion({ navigate, tripId, branchId, addCity });
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -221,7 +221,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           setPreviewCity({ ...city, _tick: Date.now() });
         }} status={status} />
       </div>
-      <ItineraryGenButton
+      <ItinerarySuggestionButton
         onClick={() => setItGenOpen(true)}
         style={{
           position: 'fixed',
@@ -231,7 +231,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           transition: 'bottom 200ms ease-out',
         }}
       />
-      <ItineraryGenSheet
+      <ItinerarySuggestionSheet
         open={itGenOpen}
         onOpenChange={setItGenOpen}
         generating={generating}

@@ -4,7 +4,7 @@ import { createTrip } from '../../hooks/useTrip';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
-export function useItineraryGen({ navigate, tripId, branchId, addCity }) {
+export function useItinerarySuggestion({ navigate, tripId, branchId, addCity }) {
   const { isAuthenticated } = useAuth();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
