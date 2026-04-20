@@ -1,28 +1,13 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { CityPinPopup } from './CityPinPopup';
+import { SuggestionItem } from './suggestion/SuggestionItem';
 import { useFilter } from '../context/FilterContext';
-import { supabase } from '../lib/supabase';
-import { haversineKm } from '../lib/distance';
-
-export const SUGGESTION_TYPES = {
-  distance: { label: 'Distance' },
-  transit: { label: 'Transit' },
-  popular: { label: 'Popular' },
-  purpose: { label: 'Purpose' },
-};
-
-function rankCandidates(filtered, origin, _suggestionOption) {
-  const byDistance = filtered
-    .map((c) => ({ c, d: haversineKm(origin.lat, origin.lng, c.lat, c.lng) }))
-    .sort((a, b) => a.d - b.d)
-    .slice(0, 20)
-    .map(({ c }) => c);
-  return byDistance;
-}
+import { discover } from '../lib/discover';
+import { bump } from '../lib/haptics';
 
 export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity, onSuggest, suggestionOption }) {
-  const { activeFilters, filterValues } = useFilter();
+  const { activeFilters, filterValues, month } = useFilter();
   const [candidates, setCandidates] = useState(null);
+  const [fetchError, setFetchError] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const scrollerRef = useRef(null);
 
@@ -32,53 +17,57 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
     return `area:${area}|experience:${experience}`;
   }, [activeFilters, filterValues]);
 
-  const optionKey = suggestionOption
-    ? `${suggestionOption.type}:${suggestionOption.purpose || ''}`
-    : '';
+  const purposes = suggestionOption?.purposes || [];
+  const crowd = suggestionOption?.crowd ?? null;
+  const optionKey = [
+    purposes.slice().sort().join(','),
+    crowd || '',
+  ].join('|');
 
   useEffect(() => {
     if (!origin) return;
     let cancelled = false;
     setCandidates(null);
+    setFetchError(false);
 
     (async () => {
-      let q = supabase
-        .from('catalog_cities')
-        .select('id,name,country,lat,lng,area,experiences,population')
-        .not('lat', 'is', null)
-        .gte('population', 50000)
-        .limit(500);
+      const filters = {
+        origin: { lat: origin.lat, lng: origin.lng },
+        max_flight_hours: 4,
+        limit: 20,
+      };
 
-      if (activeFilters.has('area')) {
-        const v = filterValues.get('area');
-        if (v) q = q.eq('area', v);
-      }
-      if (activeFilters.has('experience')) {
-        const v = filterValues.get('experience');
-        if (v) q = q.contains('experiences', [v]);
-      }
+      if (month) filters.month = month;
+      if (purposes.length > 0) filters.vibes = purposes;
+      if (crowd) filters.crowd = crowd;
 
-      if (suggestionOption?.type === 'purpose' && suggestionOption.purpose) {
-        q = q.contains('experiences', [suggestionOption.purpose]);
+      const area = activeFilters.has('area') ? filterValues.get('area') : null;
+      if (area) filters.region = area;
+
+      const experience = activeFilters.has('experience') ? filterValues.get('experience') : null;
+      if (experience) {
+        filters.vibes = [...(filters.vibes || []), experience];
       }
 
-      const { data, error } = await q;
-      if (cancelled) return;
-      if (error || !Array.isArray(data)) {
-        setCandidates([]);
+      let results;
+      try {
+        results = await discover(filters);
+      } catch {
+        if (!cancelled) { setFetchError(true); setCandidates([]); }
         return;
       }
+      if (cancelled) return;
 
-      const filtered = data.filter((c) => {
-        if (origin.id != null) return c.id !== origin.id;
+      const filtered = results.filter((c) => {
+        if (origin.id != null) return c.city_id !== origin.id;
         return !(c.name === origin.name && c.country === origin.country);
       });
 
-      setCandidates(rankCandidates(filtered, origin, suggestionOption));
+      setCandidates(filtered);
     })();
 
     return () => { cancelled = true; };
-  }, [origin, filterKey, optionKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [origin, filterKey, optionKey, month]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
@@ -139,20 +128,20 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
     position: 'fixed',
     left: 0,
     right: 0,
-    bottom: 80,
+    bottom: 'max(80px, calc(60px + env(safe-area-inset-bottom)))',
     zIndex: 1500,
     pointerEvents: 'none',
   };
 
   const closeBtnStyle = {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 20,
-    height: 20,
+    top: 0,
+    right: 0,
+    width: 44,
+    height: 44,
     borderRadius: '50%',
     background: 'transparent',
-    color: '#fff',
+    color: 'var(--bg)',
     border: 'none',
     cursor: 'pointer',
     display: 'flex',
@@ -172,14 +161,15 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
     WebkitOverflowScrolling: 'touch',
     pointerEvents: 'auto',
     touchAction: 'pan-x',
+    overscrollBehavior: 'contain',
   };
 
   const cardWrapperStyle = {
     flex: '0 0 240px',
     scrollSnapAlign: 'center',
     background: 'var(--surface, #fff)',
-    borderRadius: 12,
-    boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+    borderRadius: 'var(--r-lg)',
+    boxShadow: 'var(--shadow-lg)',
     overflow: 'hidden',
     position: 'relative',
   };
@@ -189,7 +179,7 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
       type="button"
       aria-label="Close suggestions"
       title="Close"
-      onClick={(e) => { e.stopPropagation(); onClose?.(); }}
+      onClick={(e) => { e.stopPropagation(); bump(); onFocusCity?.(origin); onClose?.(); }}
       style={closeBtnStyle}
     >
       <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -208,7 +198,6 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
             style={{
               ...cardWrapperStyle,
               height: 280,
-              background: '#f1f1f1',
             }}
           />
         )}
@@ -217,21 +206,25 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
           <div style={{ ...cardWrapperStyle, padding: 16 }}>
             <div style={{
               fontSize: 14,
-              color: 'var(--text, #111)',
+              color: fetchError ? 'var(--danger)' : 'var(--text)',
               lineHeight: 1.4,
               marginBottom: 12,
-            }}>
-              No cities match these filters near {origin?.name}. Try turning off a filter.
+            }}
+            role={fetchError ? 'alert' : undefined}
+            >
+              {fetchError
+                ? 'Could not load suggestions. Check your connection and try again.'
+                : `No cities match these filters near ${origin?.name}. Try turning off a filter.`}
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => { bump(); onClose?.(); }}
               style={{
                 padding: '6px 14px',
-                borderRadius: 8,
-                border: '1px solid var(--border, #ddd)',
-                background: 'var(--surface, #fff)',
-                color: 'var(--text, #111)',
+                borderRadius: 'var(--r-md)',
+                border: 'none',
+                background: 'var(--surface-2)',
+                color: 'var(--text)',
                 cursor: 'pointer',
                 fontSize: 13,
               }}
@@ -241,22 +234,24 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
           </div>
         )}
 
-        {Array.isArray(candidates) && candidates.length > 0 && candidates.map((c, i) => (
-          <div
-            key={c.id ?? `${c.name}-${c.country}-${i}`}
-            data-rec-card
-            data-idx={i}
-            onClick={() => onFocusCity?.(c)}
-            style={{ ...cardWrapperStyle, cursor: 'pointer' }}
-          >
-            <CityPinPopup
-              city={c}
-              onAdd={onAddCity ? () => { onAddCity(c); onClose?.(); } : undefined}
-              onSuggest={onSuggest ? (option) => onSuggest(c, option) : undefined}
-            />
-            {i === activeIdx && renderCloseBtn()}
-          </div>
-        ))}
+        {Array.isArray(candidates) && candidates.length > 0 && candidates.map((c, i) => {
+          const city = { id: c.city_id, name: c.name, country: c.country, lat: c.lat, lng: c.lng };
+          return (
+            <div
+              key={c.city_id ?? `${c.name}-${c.country}-${i}`}
+              data-rec-card
+              data-idx={i}
+              onClick={() => onFocusCity?.(city)}
+              style={{ ...cardWrapperStyle, cursor: 'pointer' }}
+            >
+              <SuggestionItem
+                city={city}
+                onAdd={onAddCity ? () => { onAddCity(city); onClose?.(); } : undefined}
+              />
+              {i === activeIdx && renderCloseBtn()}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

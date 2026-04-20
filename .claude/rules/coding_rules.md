@@ -49,6 +49,26 @@
 - All background and border values must use `var(--*)` — never `#fff`, `#000`, `#eee`, `#ddd` inline.
 - Test every new component in both light and dark before shipping.
 
+## Reuse existing RPCs and APIs
+- Before writing raw Supabase table queries, check if an RPC already exists that does what you need (e.g. `discover()`, `similar()`).
+- Never use `.contains()` or `.ilike()` on columns without verifying the column type in the migration files first.
+- Client wrappers in `src/lib/` (e.g. `discover.js`) are the canonical way to call RPCs -- use them.
+
+## Component isolation in feature directories
+- When a feature has multiple components, create a directory: `src/components/{feature}/`.
+- Feature-internal components (e.g. `SuggestionItem`, `SuggestionFilterPanel`) live inside the feature directory.
+- The parent component (e.g. `CityPinPopup`) imports from the feature directory -- never inline feature-specific UI into a shared component.
+- If a component is used in two different contexts (map popup vs carousel card), create separate components. Never reuse a complex component by hiding half its features with conditional props.
+
+## Navigation and dismiss actions
+- Close/dismiss buttons must return the user to the context that opened the current view -- not to arbitrary content.
+- In carousel/suggestion flows, "close" navigates back to the origin (the city that triggered the suggestions), not to the currently visible card.
+
+## No hardcoded pixel positions
+- Never use hardcoded `top: Npx` or `left: Npx` for positioning UI relative to other elements.
+- Use document flow, flexbox, or CSS variables for layout coupling.
+- If absolute positioning is necessary, derive the offset from a measured value (ref, CSS variable), not a magic number.
+
 ## Commit and revert policy
 - Always commit after finishing code.
 - Revert the commit if the user rejects the change — use `git revert` (not `reset --hard`).

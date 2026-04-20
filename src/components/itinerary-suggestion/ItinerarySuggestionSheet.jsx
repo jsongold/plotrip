@@ -4,7 +4,7 @@ import { getMoods } from '../../lib/discover';
 import { CriteriaForm } from './CriteriaForm';
 import { ConfirmNewTripDialog } from './ConfirmNewTripDialog';
 
-export function ItineraryGenSheet({ open, onOpenChange, onGenerate, generating, error }) {
+export function ItinerarySuggestionSheet({ open, onOpenChange, onGenerate, generating, error }) {
   const [view, setView] = useState('mood');
   const [moods, setMoods] = useState([]);
   const [pendingGenerate, setPendingGenerate] = useState(null);

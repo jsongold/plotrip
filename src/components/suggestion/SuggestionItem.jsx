@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { useCityMeta } from '../hooks/useCityMeta';
-import { forSlot, renderField } from '../lib/city/fields';
-import { bump } from '../lib/haptics';
-import { SuggestionFilterPanel } from './suggestion/SuggestionFilterPanel';
+import { useCityMeta } from '../../hooks/useCityMeta';
+import { forSlot, renderField } from '../../lib/city/fields';
+import { bump } from '../../lib/haptics';
 
 function PinIcon() {
   return (
@@ -13,7 +11,7 @@ function PinIcon() {
   );
 }
 
-export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, onSuggest }) {
+export function SuggestionItem({ city, month = new Date().getMonth() + 1, onAdd }) {
   const ref = useCityMeta(city, { month });
   const metaFields = forSlot('pinMeta')
     .map((f) => renderField(ref, f, { month }))
@@ -22,9 +20,6 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
   const metaText = metaFields.map((f) => f.text).join(' · ');
 
   const [wiki, setWiki] = useState(null);
-  const [optionsOpen, setOptionsOpen] = useState(false);
-  const showAdd = typeof onAdd === 'function';
-  const showSuggest = typeof onSuggest === 'function';
 
   useEffect(() => {
     let cancelled = false;
@@ -107,7 +102,7 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
         )}
       </div>
 
-      {showAdd && (
+      {typeof onAdd === 'function' && (
         <button
           aria-label="Add to trip"
           title="Add to trip"
@@ -142,66 +137,6 @@ export function CityPinPopup({ city, month = new Date().getMonth() + 1, onAdd, o
           <PinIcon />
         </button>
       )}
-
-      {showSuggest && (
-        <button
-          aria-label="Suggest nearby"
-          title="Suggest nearby"
-          onClick={(e) => { e.stopPropagation(); bump(); setOptionsOpen((v) => !v); }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.08)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = 'var(--shadow-md)';
-          }}
-          style={{
-            position: 'absolute',
-            top: 96,
-            right: showAdd ? 64 : 12,
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            background: optionsOpen ? 'var(--accent, #2563eb)' : 'var(--secondary)',
-            color: optionsOpen ? 'var(--accent-text, #fff)' : 'var(--secondary-text)',
-            border: 'none',
-            cursor: 'pointer',
-            boxShadow: 'var(--shadow-md)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 0,
-            transition: 'transform 120ms ease, box-shadow 120ms ease, background 120ms ease',
-          }}
-        >
-          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
-            <path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2zm6 12l.9 2.6L21.5 18l-2.6.9L18 21.5l-.9-2.6L14.5 18l2.6-.9L18 14z"/>
-          </svg>
-        </button>
-      )}
-
-      <div style={{
-        overflow: 'hidden',
-        maxHeight: optionsOpen ? 160 : 0,
-        opacity: optionsOpen ? 1 : 0,
-        transition: 'max-height 220ms cubic-bezier(0.16, 1, 0.3, 1), opacity 180ms ease',
-        display: 'flex',
-        justifyContent: 'center',
-        padding: optionsOpen ? '6px 0' : '0',
-      }}>
-        {showSuggest && (
-          <SuggestionFilterPanel onSearch={(filters) => { setOptionsOpen(false); onSuggest(filters); }} />
-        )}
-      </div>
     </div>
   );
-}
-
-export function mountCityPinPopup(city, opts = {}) {
-  const container = document.createElement('div');
-  const root = createRoot(container);
-  root.render(<CityPinPopup city={city} {...opts} />);
-  container._unmount = () => { try { root.unmount(); } catch {} };
-  return container;
 }

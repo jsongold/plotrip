@@ -16,7 +16,7 @@ function WandIcon({ size = 22 }) {
   );
 }
 
-export function ItineraryGenButton({ onClick, style }) {
+export function ItinerarySuggestionButton({ onClick, style }) {
   return (
     <button
       type="button"
