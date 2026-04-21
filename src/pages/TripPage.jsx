@@ -211,12 +211,16 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           )}
         </button>
       )}
-      <div style={{
-        position: 'fixed', left: 0, right: 0,
-        bottom: 'calc(24px + env(safe-area-inset-bottom))',
-        zIndex: 1000, padding: '0 16px',
-        pointerEvents: 'auto',
-      }}>
+      <div
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+        style={{
+          position: 'fixed', left: 0, right: 0,
+          bottom: 'calc(24px + env(safe-area-inset-bottom))',
+          zIndex: 1000, padding: '0 16px',
+          pointerEvents: 'auto',
+        }}
+      >
         <Toolbar onAdd={(city) => {
           setPreviewCity({ ...city, _tick: Date.now() });
         }} status={status} />
