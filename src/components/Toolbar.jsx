@@ -144,11 +144,6 @@ const selectStyles = {
     fontSize: 14,
     color: '#aaa',
   }),
-  input: (base) => ({
-    ...base,
-    width: '100%',
-    caretColor: 'auto',
-  }),
 };
 
 const circleBtn = {
