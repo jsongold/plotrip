@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react';
+import L from 'leaflet';
 import { Toolbar } from './Toolbar';
 
 export function SearchBar({ onAdd, status, style }) {
@@ -7,14 +8,8 @@ export function SearchBar({ onAdd, status, style }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const stop = (e) => e.stopPropagation();
-    const events = [
-      'touchstart', 'touchmove', 'touchend',
-      'mousedown', 'mouseup', 'click', 'dblclick',
-      'contextmenu',
-    ];
-    events.forEach((evt) => el.addEventListener(evt, stop));
-    return () => events.forEach((evt) => el.removeEventListener(evt, stop));
+    L.DomEvent.disableClickPropagation(el);
+    L.DomEvent.disableScrollPropagation(el);
   }, []);
 
   return (
