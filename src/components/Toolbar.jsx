@@ -144,6 +144,11 @@ const selectStyles = {
     fontSize: 14,
     color: '#aaa',
   }),
+  input: (base) => ({
+    ...base,
+    width: '100%',
+    gridTemplateColumns: '0 1fr',
+  }),
 };
 
 const circleBtn = {
