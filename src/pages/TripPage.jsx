@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Map } from '../components/Map';
-import { Toolbar } from '../components/Toolbar';
+import { SearchBar } from '../components/SearchBar';
 import { CityList } from '../components/CityList';
 import { BranchBar } from '../components/BranchBar';
 import { PasswordGate } from '../components/PasswordGate';
@@ -211,16 +211,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           )}
         </button>
       )}
-      <div style={{
-        position: 'fixed', left: 0, right: 0,
-        bottom: 'calc(24px + env(safe-area-inset-bottom))',
-        zIndex: 1000, padding: '0 16px',
-        pointerEvents: 'auto',
-      }}>
-        <Toolbar onAdd={(city) => {
-          setPreviewCity({ ...city, _tick: Date.now() });
-        }} status={status} />
-      </div>
+      <SearchBar onAdd={(city) => setPreviewCity({ ...city, _tick: Date.now() })} status={status} />
       <ItinerarySuggestionButton
         onClick={() => setItGenOpen(true)}
         style={{
