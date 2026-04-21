@@ -24,14 +24,6 @@ export function useTripHandlers({
   }
 
   function handleAdd(city) {
-    const duplicate = cities.some(
-      (c) => c.name === city.name && Math.abs(c.lat - city.lat) < 0.01
-    );
-    if (duplicate) {
-      setStatus(`${city.name} is already added`);
-      setTimeout(() => setStatus(''), 2000);
-      return;
-    }
     addCity(city);
     // Auto-set start_date to today if not set
     if (!startDate) {

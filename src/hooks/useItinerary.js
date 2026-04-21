@@ -17,10 +17,7 @@ export function useItinerary() {
   const [cities, setCities] = useState(() => loadFromUrl());
 
   function addCity(city) {
-    setCities(prev => {
-      if (prev.some(c => c.name === city.name && Math.abs(c.lat - city.lat) < 0.01)) return prev;
-      return [...prev, city];
-    });
+    setCities(prev => [...prev, city]);
   }
 
   function removeCity(index) {
