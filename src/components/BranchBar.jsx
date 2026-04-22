@@ -3,6 +3,7 @@ import { EditableName } from './EditableName';
 import { BranchMenu } from './BranchMenu';
 import { TripMenu } from './TripMenu';
 import { ShareIcon } from './ShareIcon';
+import { CopyItineraryIcon } from './CopyItineraryIcon';
 
 export function BranchBar({
   tripId,
@@ -17,6 +18,8 @@ export function BranchBar({
   onNewBranch,
   onDeleteBranch,
   onCompare,
+  cities,
+  startDate,
 }) {
   const currentBranch = branches?.find((b) => b.id === currentBranchId);
   const [branchMenuOpen, setBranchMenuOpen] = useState(false);
@@ -108,7 +111,7 @@ export function BranchBar({
         </button>
       )}
 
-      {/* Share button (far right) */}
+      <CopyItineraryIcon cities={cities} startDate={startDate} />
       <ShareIcon onClick={() => onShare?.()} />
     </div>
   );

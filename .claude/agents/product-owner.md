@@ -36,6 +36,10 @@ Plotrip is an interactive trip planner centered around a live map interface. Use
 8. **Sharing** -- Share trip links (public or password-protected), short URL generation
 9. **Trip Browser** -- List all user trips with quick access
 10. **Auth** -- Supabase Auth (email OTP + Google OAuth ready, currently guest mode)
+11. **Weather** -- Climate and temperature intelligence on the map. Comprised of three sub-features:
+    - **Temperature Heatmap** -- Month-selectable global temperature overlay rendered as a Leaflet GridLayer. Data pipeline: `city_monthly` table (avg_high_c, avg_low_c per city per month) -> IDW interpolation onto 72x36 equirectangular grid (`pipeline/scripts/generate_heatmap.py`) -> static JSON per month (`public/heatmap/MM.json`) -> bilinear-sampled canvas tiles on frontend (`src/lib/filters/builtin/climate.js`). Registered as the `climate` filter (icon: thermometer, `dependsOnMonth: true`). Color scale: -20C (blue) to 40C (red) with 7 gradient stops.
+    - **Weather Info on Map** -- (Planned) Show weather conditions (sunny/rainy/cloudy icons, precipitation) per city marker or region, sourced from climate data. Helps users understand seasonal weather patterns beyond just temperature.
+    - **Degrees Info on Map** -- (Planned) Display actual temperature values (high/low in Celsius) on or near city markers when the climate filter is active. Allows users to see precise numbers rather than only interpreting the heatmap color gradient.
 
 ## Design System
 
@@ -58,8 +62,15 @@ Reference: `src/styles/tokens.css`, `docs/design-tone.md`, `.claude/rules/coding
 ## Roadmap Context
 
 - **Phase 1 (Priority)**: Replace Nominatim with Supabase RPC + Edge Function (pg_trgm, unaccent)
-- **Phase 2**: Replace OSM tiles with PMTiles + MapLibre GL (vector, offline-capable)
-- **Phase 3**: POI discovery (Overture Maps Places)
+- **Phase 2**: Weather feature completion -- weather condition icons per city, degrees labels on map markers when climate filter active
+- **Phase 3**: Replace OSM tiles with PMTiles + MapLibre GL (vector, offline-capable)
+- **Phase 4**: POI discovery (Overture Maps Places)
+
+## Data Pipeline
+
+- **Climate ETL**: `scripts/etl/climate.mjs` seeds `city_monthly` table with avg_high_c / avg_low_c per city per month. Orchestrated via Prefect (`pipeline/flows/etl_climate.py`).
+- **Heatmap Generation**: `pipeline/scripts/generate_heatmap.py` reads `city_monthly` + `catalog_cities` from Supabase, runs IDW interpolation, outputs 12 static JSON files to `public/heatmap/`.
+- **Climate Shapes**: `scripts/etl/climate-shapes.mjs` pre-computes land-clipped circle polygons stored as `catalog_cities.climate_poly` (JSONB GeoJSON).
 
 ## How to Respond
 

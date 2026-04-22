@@ -32,6 +32,7 @@
     "date-holidays": "^3.27.0",
     "leaflet": "^1.9.4",
     "leaflet-arrowheads": "^1.4.0",
+    "leaflet.heat": "^0.2.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-select": "^5.10.2",

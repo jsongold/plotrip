@@ -163,6 +163,8 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
                 const other = branches.find((b) => b.id !== branchId);
                 if (other) setCompareBranchId(other.id);
               }}
+              cities={cities}
+              startDate={startDate}
             />
           </div>
         }
