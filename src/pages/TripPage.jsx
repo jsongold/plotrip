@@ -5,7 +5,6 @@ import { CityList } from '../components/CityList';
 import { BranchBar } from '../components/BranchBar';
 import { PasswordGate } from '../components/PasswordGate';
 import { DestinationSheet } from '../components/DestinationSheet';
-import { CompareView } from '../components/CompareView';
 import { useBranch } from '../hooks/useBranch';
 import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/useTrip';
 import { useTripHandlers } from '../hooks/useTripHandlers';
@@ -27,7 +26,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     useBranch(branchId, branches);
   const [status, setStatus] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
-  const [compareBranchId, setCompareBranchId] = useState(null);
   const [focusRequest, setFocusRequest] = useState(null);
   const [showTooltips, setShowTooltips] = useState(true);
   const [suggestFor, setSuggestFor] = useState(null);
@@ -159,10 +157,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
               onSelectTrip={(tId, bId) => navigate(`/t/${tId}/b/${bId}`)}
               onNewBranch={handleNewBranch}
               onDeleteBranch={handleDeleteBranch}
-              onCompare={() => {
-                const other = branches.find((b) => b.id !== branchId);
-                if (other) setCompareBranchId(other.id);
-              }}
               cities={cities}
               startDate={startDate}
             />
@@ -260,15 +254,6 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         </svg>
       </button>
       <FilterBar />
-
-      {compareBranchId && (
-        <CompareView
-          tripId={tripId}
-          branchAId={branchId}
-          branchBId={compareBranchId}
-          onClose={() => setCompareBranchId(null)}
-        />
-      )}
 
       {suggestFor && suggestOption && (
         <CitySuggestionCarousel
