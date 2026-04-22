@@ -1,0 +1,17 @@
+[project]
+name = "pipeline"
+version = "0.1.0"
+description = "Plotrip data pipelines"
+requires-python = ">=3.11"
+dependencies = [
+    "prefect>=3.0,<4.0",
+    "python-dotenv>=1.0",
+    "numpy",
+    "pillow",
+    "scipy",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
