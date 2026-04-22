@@ -5,6 +5,7 @@ import { CityList } from '../components/CityList';
 import { BranchBar } from '../components/BranchBar';
 import { PasswordGate } from '../components/PasswordGate';
 import { DestinationSheet } from '../components/DestinationSheet';
+import { DestinationToggle } from '../components/DestinationToggle';
 import { useBranch } from '../hooks/useBranch';
 import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/useTrip';
 import { useTripHandlers } from '../hooks/useTripHandlers';
@@ -170,42 +171,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
       {/* Layer 3: Search bar (always on top, fixed to viewport) */}
       {!panelOpen && (
-        <button
-          onClick={() => setPanelOpen(true)}
-          title="Show destinations"
-          style={{
-            position: 'fixed', left: '50%',
-            bottom: 'calc(70px + env(safe-area-inset-bottom))',
-            transform: 'translateX(-50%)',
-            zIndex: 1000,
-            width: 64, height: 64,
-            border: 'none', background: 'transparent', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-            color: 'var(--text-muted)',
-          }}
-        >
-          <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 14l6-6 6 6" />
-          </svg>
-          {cities.length > 0 && (
-            <span
-              aria-hidden="true"
-              style={{
-                position: 'absolute',
-                top: 6, right: 6,
-                minWidth: 20, height: 20, padding: '0 5px',
-                borderRadius: 10,
-                background: 'var(--accent, #2563eb)',
-                color: 'var(--accent-text)',
-                fontSize: 11, fontWeight: 700,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-              }}
-            >
-              {cities.length}
-            </span>
-          )}
-        </button>
+        <DestinationToggle count={cities.length} onClick={() => setPanelOpen(true)} />
       )}
       <SearchBar onAdd={(city) => setPreviewCity({ ...city, _tick: Date.now() })} status={status} />
       <ItinerarySuggestionButton
