@@ -1,48 +1,116 @@
-/**
- * Climate filter — city_monthly.avg_high_c で指定月の気温をその都市のエリアに
- * **polygon で塗り分け**。5 温度レベル × 5 色。
- *
- * 現状は catalog_cities の lat/lng 中心に 0.5° bbox の仮 polygon を使う。
- * 将来 catalog_cities.climate_poly (GeoJSON) が入ったら makeBboxPolygon を
- * そこからの変換に差し替えるだけで対応可能。
- *
- * 依存:
- * - ../registry: registerFilter
- * - ../../supabase: supabase client
- * - ../badgeLayer: mountCatalogLayer + makeBboxPolygon
- *
- * DB:
- * - city_monthly(city_id integer, month smallint, avg_high_c real, ...)
- */
 import L from 'leaflet';
 import { registerFilter } from '../registry';
-import { supabase } from '../../supabase';
-import { mountCatalogLayer, makeBboxPolygon } from '../badgeLayer';
 
-function makeTempLabel(city, tempC, color) {
-  return L.marker([city.lat, city.lng], {
-    interactive: false,
-    icon: L.divIcon({
-      className: '',
-      html: `<div style="
-        font-size:13px;font-weight:700;color:${color};
-        text-shadow:0 0 3px #fff,0 0 3px #fff;
-        white-space:nowrap;text-align:center;
-      ">${Math.round(tempC)}°</div>`,
-      iconSize: [36, 18],
-      iconAnchor: [18, 9],
-    }),
-  });
+const GRID_W = 72;
+const GRID_H = 36;
+const TEMP_MIN = -20;
+const TEMP_MAX = 40;
+const OVERLAY_OPACITY = 0.3;
+const CELL_LAT = 180 / GRID_H;
+const CELL_LNG = 360 / GRID_W;
+
+const STOPS = [
+  [0.0, 230, 230, 240],
+  [0.33, 40, 100, 220],
+  [0.5, 0, 150, 100],
+  [0.67, 20, 160, 60],
+  [0.83, 230, 100, 10],
+  [1.0, 200, 30, 30],
+];
+
+function tempToColor(t) {
+  const norm = Math.max(0, Math.min(1, (t - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)));
+  let i = 0;
+  while (i < STOPS.length - 2 && STOPS[i + 1][0] < norm) i++;
+  const [p0, r0, g0, b0] = STOPS[i];
+  const [p1, r1, g1, b1] = STOPS[i + 1];
+  const f = (norm - p0) / (p1 - p0);
+  return `rgba(${Math.round(r0 + (r1 - r0) * f)},${Math.round(g0 + (g1 - g0) * f)},${Math.round(b0 + (b1 - b0) * f)},${OVERLAY_OPACITY})`;
 }
 
-function makeClimateShape(city, style) {
-  if (city.climate_poly) {
-    return L.geoJSON(city.climate_poly, {
-      style: () => ({ weight: 1.2, fillOpacity: 0.4, interactive: false, ...style }),
-    });
-  }
-  return makeBboxPolygon(city, style);
+const cache = new Map();
+
+async function loadGrid(month) {
+  if (cache.has(month)) return cache.get(month);
+  const pad = String(month).padStart(2, '0');
+  const resp = await fetch(`${import.meta.env.BASE_URL}heatmap/${pad}.json`);
+  const grid = await resp.json();
+  cache.set(month, grid);
+  return grid;
 }
+
+const TemperatureOverlay = L.Layer.extend({
+  initialize(options) {
+    L.Util.setOptions(this, options);
+    this._grid = options.grid;
+  },
+
+  onAdd(map) {
+    this._map = map;
+    this._canvas = L.DomUtil.create('canvas', 'leaflet-temperature-overlay');
+    const pane = map.getPane('overlayPane');
+    pane.appendChild(this._canvas);
+    this._canvas.style.position = 'absolute';
+    this._canvas.style.pointerEvents = 'none';
+
+    this._draw = this._draw.bind(this);
+    map.on('moveend', this._draw);
+    map.on('zoomend', this._draw);
+    map.on('resize', this._draw);
+    this._draw();
+  },
+
+  onRemove(map) {
+    map.off('moveend', this._draw);
+    map.off('zoomend', this._draw);
+    map.off('resize', this._draw);
+    if (this._canvas && this._canvas.parentNode) {
+      this._canvas.parentNode.removeChild(this._canvas);
+    }
+    this._canvas = null;
+  },
+
+  _draw() {
+    const map = this._map;
+    if (!map || !this._canvas) return;
+
+    const size = map.getSize();
+    this._canvas.width = size.x;
+    this._canvas.height = size.y;
+
+    const topLeft = map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._canvas, topLeft);
+
+    const ctx = this._canvas.getContext('2d');
+    ctx.clearRect(0, 0, size.x, size.y);
+
+    const grid = this._grid;
+    for (let r = 0; r < GRID_H; r++) {
+      for (let c = 0; c < GRID_W; c++) {
+        const temp = grid[r][c];
+        if (temp == null) continue;
+
+        const latN = 90 - r * CELL_LAT;
+        const latS = 90 - (r + 1) * CELL_LAT;
+        const lngW = -180 + c * CELL_LNG;
+        const lngE = -180 + (c + 1) * CELL_LNG;
+
+        const nw = map.latLngToContainerPoint([latN, lngW]);
+        const se = map.latLngToContainerPoint([latS, lngE]);
+
+        const x = nw.x;
+        const y = nw.y;
+        const w = se.x - nw.x;
+        const h = se.y - nw.y;
+
+        if (x + w < 0 || x > size.x || y + h < 0 || y > size.y) continue;
+
+        ctx.fillStyle = tempToColor(temp);
+        ctx.fillRect(x, y, w, h);
+      }
+    }
+  },
+});
 
 registerFilter({
   slug: 'climate',
@@ -52,53 +120,19 @@ registerFilter({
   dependsOnMonth: true,
   order: 10,
   mountLayer(map, ctx) {
-    return mountCatalogLayer(map, ctx, {
-      slug: 'climate',
-      async fetchExtra({ cityIds, month }) {
-        const { data, error } = await supabase
-          .from('city_monthly')
-          .select('city_id, avg_high_c')
-          .in('city_id', cityIds)
-          .eq('month', month);
-        if (error) throw error;
-        return new Map((data || []).map((r) => [r.city_id, r.avg_high_c]));
-      },
-      draw(city, tempC) {
-        if (tempC == null) {
-          return makeClimateShape(city, {
-            color: '#9ca3af',
-            weight: 1,
-            dashArray: '4,4',
-            fillColor: '#d1d5db',
-            fillOpacity: 0.15,
-          });
-        }
-        const color = climateColor(tempC);
-        const shape = makeClimateShape(city, {
-          color,
-          weight: 1.2,
-          fillColor: color,
-          fillOpacity: 0.4,
-        });
-        const label = makeTempLabel(city, tempC, color);
-        return [shape, label];
-      },
+    const { layerGroup, month } = ctx;
+    let cancelled = false;
+    let overlay;
+
+    loadGrid(month).then((grid) => {
+      if (cancelled) return;
+      overlay = new TemperatureOverlay({ grid });
+      overlay.addTo(map);
     });
+
+    return () => {
+      cancelled = true;
+      if (overlay && map.hasLayer(overlay)) map.removeLayer(overlay);
+    };
   },
 });
-
-/**
- * 5 段階の気候カラー。
- *   ≤  0°C : Cold      (blue)
- *   ≤ 10°C : Cool      (teal)
- *   ≤ 20°C : Mild      (green)
- *   ≤ 28°C : Warm      (amber)
- *   >  28°C: Hot       (red)
- */
-function climateColor(tempC) {
-  if (tempC <= 0) return '#3b82f6';   // cold
-  if (tempC <= 10) return '#06b6d4';  // cool
-  if (tempC <= 20) return '#10b981';  // mild
-  if (tempC <= 28) return '#f59e0b';  // warm
-  return '#ef4444';                   // hot
-}

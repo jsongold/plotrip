@@ -69,6 +69,11 @@
 - Use document flow, flexbox, or CSS variables for layout coupling.
 - If absolute positioning is necessary, derive the offset from a measured value (ref, CSS variable), not a magic number.
 
+## ASCII-safe file names and identifiers
+- All generated file names, slugs, storage keys, and URL path segments must be ASCII-only.
+- Always normalize Unicode to NFKD and strip non-ASCII before generating a file name or slug (e.g. `Bogotá` → `bogota`).
+- Never pass user-facing display names directly as file paths or object keys without sanitization.
+
 ## Commit and revert policy
 - Always commit after finishing code.
 - Revert the commit if the user rejects the change — use `git revert` (not `reset --hard`).

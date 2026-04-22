@@ -1,108 +1,88 @@
-"""Generate temperature heatmap PNGs from WorldClim monthly average data.
+"""Generate temperature heatmap JSON from city_monthly CSV.
+
+Reads CSV with (city_name, lat, lng, month, avg_high_c, ...),
+interpolates (IDW) onto a 72x36 equirectangular grid, outputs JSON per month.
 
 Usage:
     cd pipeline
-    uv run python scripts/generate_heatmap.py --month 1 --out ../docs/heatmap_01.png
-
-First run downloads WorldClim 10-minute resolution data (~5MB zip) and caches it locally.
+    uv run python scripts/generate_heatmap.py -i data/climate/city_monthly.csv -o ../public/heatmap
 """
 
 import argparse
-import io
-import zipfile
+import csv
+import json
 from pathlib import Path
-from urllib.request import urlopen
 
 import numpy as np
-from PIL import Image
 
-WORLDCLIM_URL = "https://geodata.ucdavis.edu/climate/worldclim/2_1/base/wc2.1_10m_tavg.zip"
-CACHE_DIR = Path(__file__).resolve().parent / ".cache"
-
-TEMP_MIN = -20.0
-TEMP_MAX = 40.0
-
-COLORMAP = np.array(
-    [
-        [0.0, 0.18, 0.53, 0.96],   # -20C  blue
-        [0.15, 0.02, 0.71, 0.84],  # -10C  cyan-ish
-        [0.33, 0.06, 0.82, 0.56],  #   0C  teal
-        [0.50, 0.10, 0.87, 0.33],  #  10C  green
-        [0.67, 0.96, 0.81, 0.13],  #  20C  yellow
-        [0.83, 0.96, 0.49, 0.08],  #  30C  orange
-        [1.0, 0.93, 0.27, 0.27],   #  40C  red
-    ]
-)
+GRID_W = 72
+GRID_H = 36
+IDW_POWER = 2
 
 
-def temp_to_rgba(temp_c: np.ndarray, alpha: int = 140) -> np.ndarray:
-    norm = np.clip((temp_c - TEMP_MIN) / (TEMP_MAX - TEMP_MIN), 0, 1)
+def idw_interpolate(points, values, grid_lats, grid_lons, power=IDW_POWER):
+    pts = np.array(points)
+    vals = np.array(values)
+    result = np.full((len(grid_lats), len(grid_lons)), np.nan)
 
-    positions = COLORMAP[:, 0]
-    r_vals = COLORMAP[:, 1]
-    g_vals = COLORMAP[:, 2]
-    b_vals = COLORMAP[:, 3]
+    for i in range(len(grid_lats)):
+        for j in range(len(grid_lons)):
+            dlat = pts[:, 0] - grid_lats[i]
+            dlon = pts[:, 1] - grid_lons[j]
+            dist = np.sqrt(dlat**2 + dlon**2)
 
-    r = np.interp(norm, positions, r_vals)
-    g = np.interp(norm, positions, g_vals)
-    b = np.interp(norm, positions, b_vals)
+            close = dist < 0.01
+            if np.any(close):
+                result[i, j] = vals[close][0]
+                continue
 
-    rgba = np.zeros((*temp_c.shape, 4), dtype=np.uint8)
-    rgba[..., 0] = (r * 255).astype(np.uint8)
-    rgba[..., 1] = (g * 255).astype(np.uint8)
-    rgba[..., 2] = (b * 255).astype(np.uint8)
-    rgba[..., 3] = np.where(np.isnan(temp_c), 0, alpha).astype(np.uint8)
+            weights = 1.0 / dist**power
+            result[i, j] = np.sum(weights * vals) / np.sum(weights)
 
-    return rgba
-
-
-def load_worldclim_month(month: int, target_h: int = 36, target_w: int = 72) -> np.ndarray:
-    cache_zip = CACHE_DIR / "wc2.1_10m_tavg.zip"
-
-    if not cache_zip.exists():
-        print(f"Downloading WorldClim data...")
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        with urlopen(WORLDCLIM_URL) as resp:
-            cache_zip.write_bytes(resp.read())
-        print(f"Cached: {cache_zip} ({cache_zip.stat().st_size // 1024} KB)")
-
-    tif_name = f"wc2.1_10m_tavg_{month:02d}.tif"
-    with zipfile.ZipFile(cache_zip) as zf:
-        with zf.open(tif_name) as f:
-            img = Image.open(io.BytesIO(f.read()))
-            data = np.array(img, dtype=np.float32)
-
-    mask = data < -999
-    data[mask] = 0.0
-
-    from scipy.ndimage import zoom
-    scale_h = target_h / data.shape[0]
-    scale_w = target_w / data.shape[1]
-    resampled = zoom(data, (scale_h, scale_w), order=1)
-
-    mask_resampled = zoom(mask.astype(np.float32), (scale_h, scale_w), order=0) > 0.5
-    resampled[mask_resampled] = np.nan
-
-    return resampled
+    return result
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate temperature heatmap PNG")
-    parser.add_argument("--month", type=int, required=True, help="Month (1-12)")
-    parser.add_argument("--out", type=str, default="heatmap.png", help="Output PNG path")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input", required=True, help="Input CSV path")
+    parser.add_argument("-o", "--outdir", default="../public/heatmap", help="Output directory")
+    parser.add_argument("--month", type=int, help="Single month (1-12). Omit for all.")
     args = parser.parse_args()
 
-    print(f"Loading WorldClim month={args.month}...")
-    data = load_worldclim_month(args.month)
-    print(f"Grid shape: {data.shape}, range: {np.nanmin(data):.1f}C to {np.nanmax(data):.1f}C")
+    by_month = {}
+    with open(args.input) as f:
+        for row in csv.DictReader(f):
+            temp = row.get("avg_high_c")
+            if not temp:
+                continue
+            m = int(row["month"])
+            if m not in by_month:
+                by_month[m] = {"points": [], "values": []}
+            by_month[m]["points"].append((float(row["lat"]), float(row["lng"])))
+            by_month[m]["values"].append(float(temp))
 
-    rgba = temp_to_rgba(data)
-    img = Image.fromarray(rgba, "RGBA")
+    print(f"Loaded {sum(len(v['points']) for v in by_month.values())} data points")
+    for m in sorted(by_month):
+        print(f"  month {m:2d}: {len(by_month[m]['points'])} cities")
 
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(str(out_path), optimize=True)
-    print(f"Saved: {out_path} ({out_path.stat().st_size} bytes)")
+    grid_lats = np.linspace(90 - (180.0 / GRID_H / 2), -90 + (180.0 / GRID_H / 2), GRID_H)
+    grid_lons = np.linspace(-180 + (360.0 / GRID_W / 2), 180 - (360.0 / GRID_W / 2), GRID_W)
+
+    outdir = Path(args.outdir)
+    outdir.mkdir(parents=True, exist_ok=True)
+    months = [args.month] if args.month else list(range(1, 13))
+
+    for m in months:
+        if m not in by_month:
+            print(f"  month {m:2d}: no data, skipping")
+            continue
+        data = by_month[m]
+        print(f"  Interpolating month {m:2d}...", end=" ", flush=True)
+        grid = idw_interpolate(data["points"], data["values"], grid_lats, grid_lons)
+        grid_list = [[None if np.isnan(v) else round(float(v), 1) for v in row] for row in grid]
+        out_path = outdir / f"{m:02d}.json"
+        out_path.write_text(json.dumps(grid_list, separators=(',', ':')))
+        print(f"{out_path} ({out_path.stat().st_size // 1024} KB)")
 
 
 if __name__ == "__main__":
