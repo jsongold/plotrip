@@ -100,8 +100,11 @@ export function CityListItem({
             }}
           />
         ) : (() => {
-          const dObj = startDate ? calcDateObj(cities, i, startDate) : null;
-          const redDay = dObj && (isWeekend(dObj) || isHoliday(dObj, c.country));
+          const dStart = startDate ? calcDateObj(cities, i, startDate) : null;
+          const days = c.days || 1;
+          const dEnd = dStart ? new Date(new Date(dStart).setDate(dStart.getDate() + days - 1)) : null;
+          const redStart = dStart && (isWeekend(dStart) || isHoliday(dStart, c.country));
+          const redEnd = dEnd && (isWeekend(dEnd) || isHoliday(dEnd, c.country));
           return (
             <span
               onClick={() => setEditingDate(i)}
@@ -111,13 +114,19 @@ export function CityListItem({
                 whiteSpace: 'nowrap', cursor: 'pointer',
                 padding: '2px 4px', borderRadius: 4,
                 minWidth: 50,
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
+                lineHeight: 1.4,
               }}
             >
-              {dObj ? (
+              {dStart ? (
                 <>
-                  {formatDate(dObj)}{' '}
-                  <span style={{ color: redDay ? '#dc2626' : '#888' }}>
-                    {formatDayOfWeek(dObj)}
+                  <span>
+                    {formatDate(dStart)}{' '}
+                    <span style={{ color: redStart ? '#dc2626' : '#888' }}>{formatDayOfWeek(dStart)}</span>
+                  </span>
+                  <span>
+                    {formatDate(dEnd)}{' '}
+                    <span style={{ color: redEnd ? '#dc2626' : '#888' }}>{formatDayOfWeek(dEnd)}</span>
                   </span>
                 </>
               ) : 'set date'}
