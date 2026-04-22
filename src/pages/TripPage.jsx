@@ -170,9 +170,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       </DestinationSheet>
 
       {/* Layer 3: Search bar (always on top, fixed to viewport) */}
-      {!panelOpen && (
-        <DestinationToggle count={cities.length} onClick={() => setPanelOpen(true)} />
-      )}
+      <DestinationToggle count={cities.length} onClick={() => setPanelOpen((v) => !v)} />
       <SearchBar onAdd={(city) => setPreviewCity({ ...city, _tick: Date.now() })} status={status} />
       <ItinerarySuggestionButton
         onClick={() => setItGenOpen(true)}
