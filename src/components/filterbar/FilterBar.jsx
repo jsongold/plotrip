@@ -26,7 +26,7 @@ export function FilterBar() {
 
   // 展開要素: 上から 順=climate→vibes→crowd→cost→events→month (toggle 直上)
   const items = [
-    ...filters.map((f) => ({ type: 'filter', key: f.slug, def: f })),
+    ...filters.filter((f) => f.slug === 'climate').map((f) => ({ type: 'filter', key: f.slug, def: f })),
     { type: 'month', key: '_month' },
   ];
   const total = items.length;
