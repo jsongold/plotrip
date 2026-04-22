@@ -3,6 +3,38 @@ import L from 'leaflet';
 import 'leaflet-arrowheads';
 import { mountCityPinPopup } from '../components/CityPinPopup';
 
+function near(a, b) { return Math.abs(a - b) < 0.01; }
+
+function overlapsEarlier(cities, index) {
+  const a = cities[index], b = cities[index + 1];
+  for (let j = 0; j < index; j++) {
+    const c = cities[j], d = cities[j + 1];
+    if ((near(a.lat, c.lat) && near(a.lng, c.lng) && near(b.lat, d.lat) && near(b.lng, d.lng)) ||
+        (near(a.lat, d.lat) && near(a.lng, d.lng) && near(b.lat, c.lat) && near(b.lng, c.lng))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function curvedPath(from, to, n = 12) {
+  const dLat = to.lat - from.lat, dLng = to.lng - from.lng;
+  const len = Math.sqrt(dLat * dLat + dLng * dLng);
+  if (len === 0) return [[from.lat, from.lng], [to.lat, to.lng]];
+  const off = len * 0.15;
+  const cLat = (from.lat + to.lat) / 2 + (-dLng / len) * off;
+  const cLng = (from.lng + to.lng) / 2 + (dLat / len) * off;
+  const pts = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    pts.push([
+      (1 - t) * (1 - t) * from.lat + 2 * (1 - t) * t * cLat + t * t * to.lat,
+      (1 - t) * (1 - t) * from.lng + 2 * (1 - t) * t * cLng + t * t * to.lng,
+    ]);
+  }
+  return pts;
+}
+
 export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDaysRef, cities, catalogLayerRef, onCitySelectRef, onSuggestRef) {
   useEffect(() => {
     const map = mapRef.current;
@@ -99,7 +131,11 @@ export function useItineraryRender(mapRef, markerLayerRef, lineLayerRef, totalDa
 
     if (cities.length >= 2) {
       for (let i = 0; i < cities.length - 1; i++) {
-        const segment = [[cities[i].lat, cities[i].lng], [cities[i + 1].lat, cities[i + 1].lng]];
+        const a = cities[i];
+        const b = cities[i + 1];
+        const segment = overlapsEarlier(cities, i)
+          ? curvedPath(a, b)
+          : [[a.lat, a.lng], [b.lat, b.lng]];
         L.polyline(segment, { color: '#ef4444', weight: 3, opacity: 0.8 })
           .arrowheads({
             size: '15px',
