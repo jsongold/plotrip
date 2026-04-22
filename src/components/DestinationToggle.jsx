@@ -1,21 +1,9 @@
 export function DestinationToggle({ count, onClick }) {
   return (
     <button
+      className="map-icon-btn"
       onClick={onClick}
       title="Show destinations"
-      style={{
-        position: 'fixed', left: '50%',
-        bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px))',
-        transform: 'translateX(-50%)',
-        zIndex: 1000,
-        width: 48, height: 48,
-        border: 'none',
-        background: 'transparent',
-        cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 0,
-        color: 'var(--text-muted)',
-      }}
     >
       <svg width={50} height={50} viewBox="0 0 64 64" aria-hidden="true">
         <path

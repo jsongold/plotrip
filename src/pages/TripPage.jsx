@@ -16,6 +16,8 @@ import { AuthActions } from '../components/auth';
 import { ItinerarySuggestionButton } from '../components/itinerary-suggestion/ItinerarySuggestionButton';
 import { ItinerarySuggestionSheet } from '../components/itinerary-suggestion/ItinerarySuggestionSheet';
 import { useItinerarySuggestion } from '../components/itinerary-suggestion/useItinerarySuggestion';
+import { LabelToggle } from '../components/LabelToggle';
+import { MapIconBar } from '../components/MapIconBar';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -170,18 +172,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
       </DestinationSheet>
 
       {/* Layer 3: Search bar (always on top, fixed to viewport) */}
-      <DestinationToggle count={cities.length} onClick={() => setPanelOpen((v) => !v)} />
       <SearchBar onAdd={(city) => setPreviewCity({ ...city, _tick: Date.now() })} status={status} />
-      <ItinerarySuggestionButton
-        onClick={() => setItGenOpen(true)}
-        style={{
-          position: 'fixed',
-          right: 72,
-          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
-          zIndex: 1200,
-          transition: 'bottom 200ms ease-out',
-        }}
-      />
       <ItinerarySuggestionSheet
         open={itGenOpen}
         onOpenChange={setItGenOpen}
@@ -191,33 +182,11 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
           await generate(filters, opts);
         }}
       />
-      <button
-        onClick={() => setShowTooltips((v) => !v)}
-        aria-label={showTooltips ? 'Hide labels' : 'Show labels'}
-        aria-pressed={!showTooltips}
-        title={showTooltips ? 'Hide labels' : 'Show labels'}
-        style={{
-          position: 'fixed',
-          right: 128,
-          bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
-          zIndex: 1200,
-          width: 44, height: 44,
-          borderRadius: 'var(--r-lg)',
-          border: `1px solid ${showTooltips ? 'var(--text)' : 'var(--border)'}`,
-          background: showTooltips ? 'var(--text)' : 'var(--surface)',
-          color: showTooltips ? 'var(--bg)' : 'var(--text)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 0, cursor: 'pointer',
-          boxShadow: 'var(--shadow-md)',
-          transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
-        }}
-      >
-        <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-          <line x1="7" y1="7" x2="7.01" y2="7" />
-        </svg>
-      </button>
-      <FilterBar />
+      <MapIconBar>
+        <FilterBar />
+        <DestinationToggle count={cities.length} onClick={() => setPanelOpen((v) => !v)} />
+        <LabelToggle active={showTooltips} onClick={() => setShowTooltips((v) => !v)} />
+      </MapIconBar>
 
       {suggestFor && suggestOption && (
         <CitySuggestionCarousel

@@ -38,7 +38,7 @@ export function MonthDial({ month, onChange, popupDirection = 'up' }) {
           transition: 'all var(--dur-fast, 120ms) var(--ease-out)',
         }}
       >
-        <CalendarIcon size={24} />
+        <CalendarIcon size={24} month={month} />
       </button>
       {open && (
         <div style={{
