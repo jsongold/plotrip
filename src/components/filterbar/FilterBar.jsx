@@ -35,14 +35,7 @@ export function FilterBar() {
   return (
     <div
       ref={rootRef}
-      style={{
-        position: 'fixed',
-        right: 16,
-        bottom: 'max(calc(80px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px), calc(var(--rec-carousel-top, 0px) + 10px))',
-        zIndex: 1200,
-        pointerEvents: 'auto',
-        transition: 'bottom 200ms ease-out',
-      }}
+      style={{ position: 'relative', pointerEvents: 'auto' }}
     >
       {/* 展開スタック: 上方向 (toggle の上) に展開 */}
       <div
@@ -50,11 +43,11 @@ export function FilterBar() {
         style={{
           position: 'absolute',
           bottom: 'calc(100% + 10px)',
-          right: 0,
+          left: 0,
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
-          alignItems: 'flex-end',
+          alignItems: 'flex-start',
           pointerEvents: open ? 'auto' : 'none',
         }}
       >
@@ -96,26 +89,25 @@ export function FilterBar() {
       {/* Filter toggle ボタン (常時) */}
       <button
         type="button"
+        className="map-icon-btn"
         aria-label="Filters"
         aria-pressed={open}
         title="Filters"
         onClick={() => { bump(); setOpen((v) => !v); }}
         style={{
-          width: 44, height: 44,
-          borderRadius: 'var(--r-lg)',
-          border: 'none',
-          background: 'var(--surface)',
-          color: open ? 'var(--active-text)' : 'var(--text)',
-          cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 0,
-          boxShadow: 'var(--shadow-md)',
-          transition: 'all 180ms cubic-bezier(0.2,0.9,0.3,1.1)',
           position: 'relative',
           transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 180ms cubic-bezier(0.2,0.9,0.3,1.1)',
         }}
       >
-        <FilterTriIcon size={24} />
+        <svg width={32} height={32} viewBox="0 0 24 24" aria-hidden="true">
+          <line x1="4" y1="6" x2="20" y2="6" stroke="#999" strokeWidth={1.5} strokeLinecap="round" />
+          <circle cx="9" cy="6" r="2.3" fill="white" stroke="#999" strokeWidth={1.5} />
+          <line x1="4" y1="12" x2="20" y2="12" stroke="#999" strokeWidth={1.5} strokeLinecap="round" />
+          <circle cx="15" cy="12" r="2.3" fill="white" stroke="#999" strokeWidth={1.5} />
+          <line x1="4" y1="18" x2="20" y2="18" stroke="#999" strokeWidth={1.5} strokeLinecap="round" />
+          <circle cx="7" cy="18" r="2.3" fill="white" stroke="#999" strokeWidth={1.5} />
+        </svg>
         {!open && activeCount > 0 && (
           <span
             aria-hidden="true"

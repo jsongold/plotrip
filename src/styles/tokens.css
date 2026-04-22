@@ -109,6 +109,24 @@ html, body {
   line-height: inherit;
 }
 
+/* Transparent floating icon button (DestinationToggle, LabelToggle, etc.) */
+.map-icon-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--text-muted);
+  position: relative;
+  pointer-events: auto;
+}
+
 /* Toggle destination tooltip visibility */
 .hide-tooltips .leaflet-tooltip {
   display: none !important;

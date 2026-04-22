@@ -57,15 +57,13 @@ export function FilterSlugIcon({ slug, size = 22 }) {
   }
 }
 
-export function CalendarIcon({ size = 22 }) {
-  const props = { width: size, height: size, viewBox: '0 0 24 24', ...COMMON };
+const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+export function CalendarIcon({ month }) {
   return (
-    <svg {...props} aria-hidden="true">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
+    <span style={{ fontSize: 13, fontWeight: 700, lineHeight: 1 }}>
+      {month != null ? MONTH_ABBR[(month - 1) % 12] : '---'}
+    </span>
   );
 }
 
