@@ -148,6 +148,11 @@ const selectStyles = {
     ...base,
     width: '100%',
     gridTemplateColumns: '0 1fr',
+    fontSize: 16,
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontSize: 16,
   }),
 };
 
