@@ -75,7 +75,7 @@ export function CityListItem({
                 const prevDate = calcDateObj(cities, i - 1, startDate);
                 if (prevDate) {
                   const diff = Math.round((newDate - prevDate) / 86400000);
-                  if (diff >= 1) onDaysChange(i - 1, diff);
+                  if (diff >= 0) onDaysChange(i - 1, diff);
                 }
               }
             }}
@@ -88,7 +88,7 @@ export function CityListItem({
                 const prevDate = calcDateObj(cities, i - 1, startDate);
                 if (prevDate) {
                   const diff = Math.round((newDate - prevDate) / 86400000);
-                  if (diff >= 1) onDaysChange(i - 1, diff);
+                  if (diff >= 0) onDaysChange(i - 1, diff);
                 }
               }
               setEditingDate(null);
@@ -101,8 +101,8 @@ export function CityListItem({
           />
         ) : (() => {
           const dStart = startDate ? calcDateObj(cities, i, startDate) : null;
-          const days = c.days || 1;
-          const dEnd = dStart ? new Date(new Date(dStart).setDate(dStart.getDate() + days - 1)) : null;
+          const nights = c.days ?? 1;
+          const dEnd = dStart ? new Date(new Date(dStart).setDate(dStart.getDate() + nights)) : null;
           const redStart = dStart && (isWeekend(dStart) || isHoliday(dStart, c.country));
           const redEnd = dEnd && (isWeekend(dEnd) || isHoliday(dEnd, c.country));
           return (
