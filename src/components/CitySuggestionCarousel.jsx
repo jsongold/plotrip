@@ -128,7 +128,7 @@ export function CitySuggestionCarousel({ origin, onClose, onFocusCity, onAddCity
     position: 'fixed',
     left: 0,
     right: 0,
-    bottom: 'max(80px, calc(60px + env(safe-area-inset-bottom)))',
+    bottom: 'max(80px, calc(60px + env(safe-area-inset-bottom)), calc(var(--dest-sheet-top, 0px) + 10px))',
     zIndex: 1500,
     pointerEvents: 'none',
   };

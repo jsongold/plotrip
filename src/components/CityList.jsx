@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { CityListItem } from './CityListItem';
 
-export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange, onCityTap }) {
+export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange, onCityTap, onLongPress, focusedIndex = null }) {
   const [editingDate, setEditingDate] = useState(null);
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
@@ -40,6 +40,8 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                     onDaysChange={onDaysChange}
                     onStartDateChange={onStartDateChange}
                     onCityTap={onCityTap}
+                    onLongPress={onLongPress}
+                    focused={focusedIndex === i}
                     editingDate={editingDate}
                     setEditingDate={setEditingDate}
                     dragHandleProps={provided.dragHandleProps}

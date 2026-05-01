@@ -1,4 +1,8 @@
+import { useRef } from 'react';
 import { calcDateObj, formatDate, toIso, formatDayOfWeek, isWeekend, isHoliday } from '../lib/date-utils';
+
+const LONG_PRESS_MS = 500;
+const MOVE_CANCEL_PX = 8;
 
 export function CityListItem({
   city: c,
@@ -10,6 +14,8 @@ export function CityListItem({
   onDaysChange,
   onStartDateChange,
   onCityTap,
+  onLongPress,
+  focused = false,
   editingDate,
   setEditingDate,
   dragHandleProps,
@@ -17,6 +23,47 @@ export function CityListItem({
   innerRef,
   isDragging,
 }) {
+  const pressTimerRef = useRef(null);
+  const longPressedRef = useRef(false);
+  const startPosRef = useRef(null);
+
+  const cancelPress = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+  };
+
+  const handlePointerDown = (e) => {
+    if (c.inherited || !onLongPress) return;
+    longPressedRef.current = false;
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+    pressTimerRef.current = setTimeout(() => {
+      longPressedRef.current = true;
+      pressTimerRef.current = null;
+      onLongPress(c, i);
+    }, LONG_PRESS_MS);
+  };
+
+  const handlePointerMove = (e) => {
+    if (!pressTimerRef.current || !startPosRef.current) return;
+    const dx = e.clientX - startPosRef.current.x;
+    const dy = e.clientY - startPosRef.current.y;
+    if (Math.hypot(dx, dy) > MOVE_CANCEL_PX) cancelPress();
+  };
+
+  const handlePointerUp = () => {
+    cancelPress();
+  };
+
+  const handleClick = () => {
+    if (longPressedRef.current) {
+      longPressedRef.current = false;
+      return;
+    }
+    if (onCityTap) onCityTap(c);
+  };
+
   return (
     <li
       ref={innerRef}
@@ -25,7 +72,8 @@ export function CityListItem({
         display: 'flex', alignItems: 'center', gap: 8,
         padding: 8, border: 'none', borderRadius: 6,
         marginBottom: 6,
-        background: isDragging ? '#e8f0fe' : c.inherited ? '#f0f0ff' : '#fafafa',
+        background: isDragging ? '#e8f0fe' : c.inherited ? '#f0f0ff' : focused ? '#e7f0ff' : '#fafafa',
+        boxShadow: focused ? 'inset 0 0 0 2px var(--accent, #2563eb)' : 'none',
         ...draggableProps.style,
       }}
     >
@@ -45,13 +93,20 @@ export function CityListItem({
         ≡
       </span>
 
-      {/* Name + country (tap to focus map) */}
+      {/* Name + country (tap to focus map, long-press for actions) */}
       <span
-        onClick={onCityTap ? () => onCityTap(c) : undefined}
+        onClick={handleClick}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={cancelPress}
+        onPointerCancel={cancelPress}
         style={{
           flex: 1, display: 'flex', flexDirection: 'column',
           fontSize: 14, minWidth: 0,
           cursor: onCityTap ? 'pointer' : 'default',
+          userSelect: 'none',
+          touchAction: 'manipulation',
         }}
       >
         <span style={{ color: '#000', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</span>
