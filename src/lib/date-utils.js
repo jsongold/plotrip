@@ -66,7 +66,7 @@ export function calcDateObj(cities, index, startDate) {
   if (!startDate) return null;
   const d = new Date(startDate + 'T00:00:00');
   for (let i = 0; i < index; i++) {
-    d.setDate(d.getDate() + (cities[i].days || 1));
+    d.setDate(d.getDate() + (cities[i].days ?? 1));
   }
   return d;
 }
