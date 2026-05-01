@@ -63,7 +63,8 @@ export function useBranch(branchId, branches) {
 
   useEffect(() => { load(); }, [load]);
 
-  async function addCity(city) {
+  async function addCity(city, opts = {}) {
+    const { afterIndex = null } = opts;
     let country = city.country || null;
     // Auto-fill country from catalog if missing
     if (!country) {
@@ -76,7 +77,17 @@ export function useBranch(branchId, branches) {
       if (match) country = match.country;
     }
 
-    const ownCount = cities.filter(c => !c.inherited).length;
+    const inheritedCount = cities.filter(c => c.inherited).length;
+    const ownCities = cities.filter(c => !c.inherited);
+
+    let insertOwnIdx;
+    if (afterIndex == null || afterIndex < inheritedCount - 1) {
+      insertOwnIdx = ownCities.length;
+    } else {
+      const ownIdx = afterIndex - inheritedCount;
+      insertOwnIdx = Math.max(0, Math.min(ownIdx + 1, ownCities.length));
+    }
+
     const { data, error } = await supabase
       .from('destinations')
       .insert({
@@ -87,18 +98,35 @@ export function useBranch(branchId, branches) {
         country,
         display_name: city.display_name || null,
         days: city.days || 1,
-        position: ownCount,
+        position: ownCities.length,
       })
       .select()
       .single();
     if (error) throw error;
-    setCities(prev => [...prev, {
+
+    const newRow = {
       id: data.id, name: data.name, lat: data.lat, lng: data.lng,
       country: data.country || null, display_name: data.display_name || null,
       days: data.days ?? 1,
       inherited: false,
-    }]);
-    track('destination_added', { city_name: city.name, country });
+    };
+
+    const nextOwn = [...ownCities];
+    nextOwn.splice(insertOwnIdx, 0, newRow);
+
+    setCities(prev => {
+      const inh = prev.filter(c => c.inherited);
+      return [...inh, ...nextOwn];
+    });
+
+    if (insertOwnIdx !== ownCities.length) {
+      for (let i = 0; i < nextOwn.length; i++) {
+        await supabase.from('destinations').update({ position: i }).eq('id', nextOwn[i].id);
+      }
+    }
+
+    track('destination_added', { city_name: city.name, country, position: insertOwnIdx });
+    return { id: newRow.id, index: inheritedCount + insertOwnIdx };
   }
 
   async function removeCity(index) {
@@ -159,6 +187,21 @@ export function useBranch(branchId, branches) {
     await supabase.from('destinations').update({ days }).eq('id', city.id);
   }
 
+  async function replaceCity(index, city) {
+    const current = cities[index];
+    if (!current || current.inherited) return;
+    const next = {
+      name: city.name,
+      lat: city.lat,
+      lng: city.lng,
+      country: city.country || null,
+      display_name: city.display_name || null,
+    };
+    setCities(prev => prev.map((c, i) => i === index ? { ...c, ...next } : c));
+    await supabase.from('destinations').update(next).eq('id', current.id);
+    track('destination_replaced', { city_name: city.name, position: index });
+  }
+
   async function clearCities() {
     const ownIds = cities.filter(c => !c.inherited).map(c => c.id);
     if (ownIds.length === 0) return;
@@ -166,7 +209,7 @@ export function useBranch(branchId, branches) {
     setCities(prev => prev.filter(c => c.inherited));
   }
 
-  return { cities, loading, addCity, removeCity, reorderCity, updateDays, clearCities, reload: load };
+  return { cities, loading, addCity, removeCity, reorderCity, updateDays, replaceCity, clearCities, reload: load };
 }
 
 export async function forkBranch(tripId, parentBranchId, forkIndex, name, cities) {

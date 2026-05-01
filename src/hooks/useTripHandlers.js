@@ -15,6 +15,8 @@ export function useTripHandlers({
   setBranches,
   setStatus,
   navigate,
+  focusedIndex = null,
+  setFocusedId = null,
 }) {
   const startDate = trip?.start_date || null;
 
@@ -23,13 +25,16 @@ export function useTripHandlers({
     setTrip(prev => ({ ...prev, start_date: date }));
   }
 
-  function handleAdd(city) {
-    addCity(city);
+  async function handleAdd(city, opts = {}) {
+    const afterIndex = opts.afterIndex !== undefined ? opts.afterIndex : focusedIndex;
+    const result = await addCity(city, { afterIndex });
+    if (result?.id != null) setFocusedId?.(result.id);
     // Auto-set start_date to today if not set
     if (!startDate) {
       const today = new Date().toISOString().split('T')[0];
       handleStartDateChange(today);
     }
+    return result;
   }
 
   async function handleFork(index) {
