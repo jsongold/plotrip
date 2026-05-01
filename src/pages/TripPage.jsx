@@ -7,6 +7,7 @@ import { PasswordGate } from '../components/PasswordGate';
 import { DestinationSheet } from '../components/DestinationSheet';
 import { DestinationToggle } from '../components/DestinationToggle';
 import { useBranch } from '../hooks/useBranch';
+import { useFocusedCity } from '../hooks/useFocusedCity';
 import { loadTrip, isProtected, isUnlocked, getDefaultBranchId } from '../hooks/useTrip';
 import { useTripHandlers } from '../hooks/useTripHandlers';
 import { FilterProvider } from '../context/FilterContext';
@@ -18,6 +19,7 @@ import { ItinerarySuggestionSheet } from '../components/itinerary-suggestion/Iti
 import { useItinerarySuggestion } from '../components/itinerary-suggestion/useItinerarySuggestion';
 import { LabelToggle } from '../components/LabelToggle';
 import { MapIconBar } from '../components/MapIconBar';
+import { CityActionSheet } from '../components/CityActionSheet';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -25,8 +27,9 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [loading, setLoading] = useState(true);
   const [unlocked, setUnlocked] = useState(false);
 
-  const { cities, loading: citiesLoading, addCity, removeCity, reorderCity, updateDays, clearCities } =
+  const { cities, loading: citiesLoading, addCity, removeCity, reorderCity, updateDays, replaceCity, clearCities } =
     useBranch(branchId, branches);
+  const { focusedIndex, setFocusedId } = useFocusedCity(cities);
   const [status, setStatus] = useState('');
   const [panelOpen, setPanelOpen] = useState(false);
   const [focusRequest, setFocusRequest] = useState(null);
@@ -35,13 +38,14 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [suggestOption, setSuggestOption] = useState(null);
   const [previewCity, setPreviewCity] = useState(null);
   const [itGenOpen, setItGenOpen] = useState(false);
+  const [actionTarget, setActionTarget] = useState(null);
   const { generate, generating, error: genError } = useItinerarySuggestion({ navigate, tripId, branchId, addCity });
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
     if (city?.lat == null || city?.lng == null) return;
+    if (city.id != null) setFocusedId(city.id);
     setFocusRequest({ lat: city.lat, lng: city.lng, _tick: Date.now() });
-    setPanelOpen(false);
   };
 
   const handleSuggestOrigin = (origin) => {
@@ -54,6 +58,18 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const handleSuggestClose = () => {
     setSuggestFor(null);
     setSuggestOption(null);
+  };
+
+  const handleCityLongPress = (city, index) => {
+    setActionTarget({ city, index });
+  };
+
+  const handleActionClose = () => setActionTarget(null);
+
+  const handleActionChange = async (picked) => {
+    if (!actionTarget) return;
+    await replaceCity(actionTarget.index, picked);
+    setActionTarget(null);
   };
 
   useEffect(() => {
@@ -101,6 +117,8 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
     setBranches,
     setStatus,
     navigate,
+    focusedIndex,
+    setFocusedId,
   });
 
   if (loading) {
@@ -167,7 +185,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         }
       >
         <div style={{ padding: '8px 16px 100px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} onLongPress={handleCityLongPress} focusedIndex={focusedIndex} />
         </div>
       </DestinationSheet>
 
@@ -187,6 +205,13 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         <DestinationToggle count={cities.length} onClick={() => setPanelOpen((v) => !v)} />
         <LabelToggle active={showTooltips} onClick={() => setShowTooltips((v) => !v)} />
       </MapIconBar>
+
+      <CityActionSheet
+        open={!!actionTarget}
+        city={actionTarget?.city || null}
+        onClose={handleActionClose}
+        onChange={handleActionChange}
+      />
 
       {suggestFor && suggestOption && (
         <CitySuggestionCarousel

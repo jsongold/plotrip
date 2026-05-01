@@ -36,7 +36,7 @@ async function fetchNominatim(q, exclude) {
   }
 }
 
-export function Toolbar({ onAdd, status }) {
+export function Toolbar({ onAdd, status, menuPlacement = 'top', usePortal = true }) {
   const loadOptions = useCallback(async (inputValue, _loaded, additional) => {
     const q = inputValue.trim();
     if (!q) {
@@ -93,8 +93,8 @@ export function Toolbar({ onAdd, status }) {
           isSearchable
           styles={selectStyles}
           components={{ DropdownIndicator: () => null, IndicatorSeparator: () => null }}
-          menuPlacement="top"
-          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+          menuPlacement={menuPlacement}
+          menuPortalTarget={usePortal && typeof document !== 'undefined' ? document.body : null}
           additional={{ page: 0 }}
           debounceTimeout={300}
           openMenuOnFocus
