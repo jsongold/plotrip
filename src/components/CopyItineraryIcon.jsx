@@ -21,7 +21,7 @@ function formatItinerary(cities, startDate) {
     const days = city.days || 1;
     const from = new Date(currentDate);
     const to = new Date(currentDate);
-    to.setDate(to.getDate() + days - 1);
+    to.setDate(to.getDate() + days);
 
     const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
     const toStr = sameMonth ? ordinal(to.getDate()) : fmtDate(to);
