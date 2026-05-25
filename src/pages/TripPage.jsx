@@ -20,6 +20,9 @@ import { useItinerarySuggestion } from '../components/itinerary-suggestion/useIt
 import { LabelToggle } from '../components/LabelToggle';
 import { MapIconBar } from '../components/MapIconBar';
 import { CityActionSheet } from '../components/CityActionSheet';
+import { calcDateObj, toIso } from '../lib/date-utils';
+import { buildHotelUrl, buildFlightUrl, buildTrainUrl, buildBusUrl } from '../lib/booking-links';
+import { useMemos } from '../hooks/useMemos';
 
 export function TripPage({ tripId, branchId, navigate, replace }) {
   const [trip, setTrip] = useState(null);
@@ -40,6 +43,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [itGenOpen, setItGenOpen] = useState(false);
   const [actionTarget, setActionTarget] = useState(null);
   const { generate, generating, error: genError } = useItinerarySuggestion({ navigate, tripId, branchId, addCity });
+  const { addMemo, memosForCity } = useMemos(branchId);
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -62,6 +66,29 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
 
   const handleCityLongPress = (city, index) => {
     setActionTarget({ city, index });
+  };
+
+  const handleInsert = (index, type, filters) => {
+    const city = cities[index];
+    const nextCity = cities[index + 1];
+    const checkin = startDate ? toIso(calcDateObj(cities, index, startDate)) : '';
+    const nights = city.days ?? 1;
+    const checkout = startDate
+      ? toIso(new Date(new Date(calcDateObj(cities, index, startDate)).setDate(calcDateObj(cities, index, startDate).getDate() + nights)))
+      : '';
+    const departDate = checkin;
+
+    if (type === 'memo') {
+      if (filters?.url) addMemo(city.id, filters.url);
+      return;
+    }
+
+    let url;
+    if (type === 'hotel') url = buildHotelUrl(city.name, checkin, checkout, filters);
+    else if (type === 'flight') url = buildFlightUrl(city.name, nextCity?.name, departDate);
+    else if (type === 'train') url = buildTrainUrl(city.name, nextCity?.name, departDate);
+    else if (type === 'bus') url = buildBusUrl(city.name, nextCity?.name, departDate);
+    if (url) window.open(url, '_blank');
   };
 
   const handleActionClose = () => setActionTarget(null);
@@ -185,7 +212,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         }
       >
         <div style={{ padding: '8px 16px 100px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} onLongPress={handleCityLongPress} focusedIndex={focusedIndex} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} onLongPress={handleCityLongPress} focusedIndex={focusedIndex} onInsert={handleInsert} />
         </div>
       </DestinationSheet>
 
