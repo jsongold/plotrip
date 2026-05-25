@@ -13,41 +13,4 @@ create table if not exists public.trip_memos (
 create index if not exists trip_memos_branch_idx
   on trip_memos (branch_id);
 
-alter table trip_memos enable row level security;
-
-create policy "read_trip_memos_public"
-  on trip_memos for select using (true);
-
-create policy "insert_trip_memos_owner"
-  on trip_memos for insert with check (
-    exists (
-      select 1 from branches
-      join trips on trips.id = branches.trip_id
-      where branches.id = trip_memos.branch_id
-        and trips.user_id = auth.uid()
-    )
-  );
-
-create policy "update_trip_memos_owner"
-  on trip_memos for update
-  using (
-    exists (
-      select 1 from branches
-      join trips on trips.id = branches.trip_id
-      where branches.id = trip_memos.branch_id
-        and trips.user_id = auth.uid()
-    )
-  );
-
-create policy "delete_trip_memos_owner"
-  on trip_memos for delete
-  using (
-    exists (
-      select 1 from branches
-      join trips on trips.id = branches.trip_id
-      where branches.id = trip_memos.branch_id
-        and trips.user_id = auth.uid()
-    )
-  );
-
 commit;
