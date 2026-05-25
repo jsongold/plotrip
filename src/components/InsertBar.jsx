@@ -279,7 +279,10 @@ export function InsertBar({ index, open, onOpen, onInsert }) {
           />
           <button
             onClick={() => {
-              if (memoUrl.trim()) onInsert(index, 'memo', { url: memoUrl.trim() });
+              if (memoUrl.trim()) {
+                onInsert(index, 'memo', { url: memoUrl.trim() });
+                setMemoUrl('');
+              }
             }}
             style={{ ...iconBtn, color: memoUrl.trim() ? 'var(--accent)' : 'var(--text-subtle)' }}
             aria-label="Save memo"
@@ -292,4 +295,63 @@ export function InsertBar({ index, open, onOpen, onInsert }) {
   }
 
   return null;
+}
+
+function domainOf(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+}
+
+function CloseIcon() {
+  return (
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+export function MemoList({ memos, onRemove }) {
+  if (!memos?.length) return null;
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', padding: '4px 0' }}>
+      {memos.map((m) => (
+        <a
+          key={m.id}
+          href={m.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            background: 'var(--surface)', borderRadius: 'var(--r-pill)',
+            padding: '3px 8px', boxShadow: 'var(--shadow-sm)',
+            border: '1px solid var(--border)',
+            fontSize: 12, color: 'var(--accent)', textDecoration: 'none',
+            maxWidth: 180, overflow: 'hidden',
+          }}
+        >
+          <img
+            src={`https://www.google.com/s2/favicons?domain=${domainOf(m.url)}&sz=16`}
+            width={14} height={14} alt=""
+            style={{ flexShrink: 0 }}
+          />
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {domainOf(m.url)}
+          </span>
+          {onRemove && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(m.id); }}
+              style={{
+                border: 'none', background: 'transparent', cursor: 'pointer',
+                padding: 0, display: 'flex', alignItems: 'center',
+                color: 'var(--text-subtle)', flexShrink: 0,
+              }}
+              aria-label="Remove memo"
+            >
+              <CloseIcon />
+            </button>
+          )}
+        </a>
+      ))}
+    </div>
+  );
 }

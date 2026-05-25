@@ -43,7 +43,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
   const [itGenOpen, setItGenOpen] = useState(false);
   const [actionTarget, setActionTarget] = useState(null);
   const { generate, generating, error: genError } = useItinerarySuggestion({ navigate, tripId, branchId, addCity });
-  const { addMemo, memosForCity } = useMemos(branchId);
+  const { addMemo, removeMemo, memosForCity } = useMemos(branchId);
   const startDate = trip?.start_date || null;
 
   const handleCityTap = (city) => {
@@ -212,7 +212,7 @@ export function TripPage({ tripId, branchId, navigate, replace }) {
         }
       >
         <div style={{ padding: '8px 16px 100px' }}>
-          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} onLongPress={handleCityLongPress} focusedIndex={focusedIndex} onInsert={handleInsert} />
+          <CityList cities={cities} onRemove={handleRemove} onReorder={reorderCity} onDaysChange={updateDays} onFork={handleFork} startDate={startDate} onStartDateChange={handleStartDateChange} onCityTap={handleCityTap} onLongPress={handleCityLongPress} focusedIndex={focusedIndex} onInsert={handleInsert} memosForCity={memosForCity} onRemoveMemo={removeMemo} />
         </div>
       </DestinationSheet>
 
