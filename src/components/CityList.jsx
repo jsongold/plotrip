@@ -2,9 +2,9 @@ import { Fragment, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { CityListItem } from './CityListItem';
 import { RouteSegment } from './searchroutes/RouteSegment';
-import { InsertBar } from './InsertBar';
+import { InsertBar, MemoList } from './InsertBar';
 
-export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange, onCityTap, onLongPress, focusedIndex = null, onInsert }) {
+export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange, onCityTap, onLongPress, focusedIndex = null, onInsert, memosForCity, onRemoveMemo }) {
   const [editingDate, setEditingDate] = useState(null);
   const [insertAt, setInsertAt] = useState(null);
 
@@ -60,6 +60,7 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
                 {i < cities.length - 1 && focusedIndex === i && (
                   <>
                     <RouteSegment from={c} to={cities[i + 1]} />
+                    <MemoList memos={memosForCity?.(c.id)} onRemove={onRemoveMemo} />
                     <InsertBar index={i} open={insertAt === i} onOpen={setInsertAt} onInsert={onInsert} />
                   </>
                 )}
