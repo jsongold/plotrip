@@ -8,8 +8,11 @@ export function buildHotelUrl(city, checkin, checkout, filters = {}) {
   });
 
   const nflt = [];
-  if (filters.budget) nflt.push(`pri=${filters.budget}`);
-  if (filters.rating) nflt.push(`review_score=${filters.rating}`);
+  if (filters.distance) nflt.push(`distance=${filters.distance}`);
+  if (filters.price === 1000) nflt.push('price=USD-1000-999999-1');
+  else if (filters.price) nflt.push(`price=USD-0-${filters.price}-1`);
+  if (filters.property) nflt.push(`ht_id=${filters.property}`);
+  if (filters.review) nflt.push(`review_score=${filters.review}`);
   if (nflt.length) params.set('nflt', nflt.join(';'));
 
   return `https://www.booking.com/searchresults.html?${params}`;
