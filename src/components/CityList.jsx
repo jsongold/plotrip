@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { CityListItem } from './CityListItem';
+import { RouteSegment } from './searchroutes/RouteSegment';
+import { InsertBar } from './InsertBar';
 
-export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange, onCityTap, onLongPress, focusedIndex = null }) {
+export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, startDate, onStartDateChange, onCityTap, onLongPress, focusedIndex = null, onInsert }) {
   const [editingDate, setEditingDate] = useState(null);
+  const [insertAt, setInsertAt] = useState(null);
+
+  useEffect(() => { setInsertAt(null); }, [focusedIndex]);
+
   if (cities.length === 0) {
     return <p style={{ color: '#999', fontSize: 13, margin: 0 }}>Click a city on the map or search to add stops.</p>;
   }
@@ -23,34 +29,41 @@ export function CityList({ cities, onRemove, onReorder, onFork, onDaysChange, st
             style={{ listStyle: 'none', padding: '0 4px', margin: '8px 0 0' }}
           >
             {cities.map((c, i) => (
-              <Draggable
-                key={`${c.name}-${i}`}
-                draggableId={`${c.name}-${i}`}
-                index={i}
-                isDragDisabled={!!c.inherited}
-              >
-                {(provided, snapshot) => (
-                  <CityListItem
-                    city={c}
-                    index={i}
-                    cities={cities}
-                    startDate={startDate}
-                    onRemove={onRemove}
-                    onFork={onFork}
-                    onDaysChange={onDaysChange}
-                    onStartDateChange={onStartDateChange}
-                    onCityTap={onCityTap}
-                    onLongPress={onLongPress}
-                    focused={focusedIndex === i}
-                    editingDate={editingDate}
-                    setEditingDate={setEditingDate}
-                    dragHandleProps={provided.dragHandleProps}
-                    draggableProps={provided.draggableProps}
-                    innerRef={provided.innerRef}
-                    isDragging={snapshot.isDragging}
-                  />
+              <Fragment key={`${c.name}-${i}`}>
+                <Draggable
+                  draggableId={`${c.name}-${i}`}
+                  index={i}
+                  isDragDisabled={!!c.inherited}
+                >
+                  {(provided, snapshot) => (
+                    <CityListItem
+                      city={c}
+                      index={i}
+                      cities={cities}
+                      startDate={startDate}
+                      onRemove={onRemove}
+                      onFork={onFork}
+                      onDaysChange={onDaysChange}
+                      onStartDateChange={onStartDateChange}
+                      onCityTap={onCityTap}
+                      onLongPress={onLongPress}
+                      focused={focusedIndex === i}
+                      editingDate={editingDate}
+                      setEditingDate={setEditingDate}
+                      dragHandleProps={provided.dragHandleProps}
+                      draggableProps={provided.draggableProps}
+                      innerRef={provided.innerRef}
+                      isDragging={snapshot.isDragging}
+                    />
+                  )}
+                </Draggable>
+                {i < cities.length - 1 && focusedIndex === i && (
+                  <>
+                    <RouteSegment from={c} to={cities[i + 1]} />
+                    <InsertBar index={i} open={insertAt === i} onOpen={setInsertAt} onInsert={onInsert} />
+                  </>
                 )}
-              </Draggable>
+              </Fragment>
             ))}
             {provided.placeholder}
           </ul>
